@@ -1,0 +1,269 @@
+{
+  "playbook": [
+    {
+      "name": "Battleborn",
+      "class": "cutter",
+      "description": "You may expend your **special armor** to reduce harm from an attack in combat or to **push yourself** during a fight."
+    },
+    {
+      "name": "Bodyguard",
+      "class": "cutter",
+      "description": "When you **protect** a teammate, take **+1d** to your resistance roll. When you gather info to anticipate possible threats in the current situation, you get **+1 effect**."
+    },
+    {
+      "name": "Arcane Fighter",
+      "class": "cutter",
+      "description": "You may imbue your hands, melee weapons, or tools with spirit energy. You gain **potency** in combat vs. the supernatural."
+    },
+    {
+      "name": "Leader",
+      "class": "cutter",
+      "description": "When you **Command** a **cohort** in combat, they continue to fight when they would otherwise **break** (they’re not taken out when they suffer level 3 harm). They gain **+1 effect** and **1 armor**."
+    },
+    {
+      "name": "Mule",
+      "class": "cutter",
+      "description": "Your load limits are higher. Light: 5. Normal: 7. Heavy: 8."
+    },
+    {
+      "name": "Not to be trifled with",
+      "class": "cutter",
+      "description": "You can **push yourself** to do one of the following:\n- perform a feat of physical force that verges on the superhuman\n— engage a small gang on equal footing in close combat."
+    },
+    {
+      "name": "Savage",
+      "class": "cutter",
+      "description": "When you unleash physical violence, it’s especially frightening. When you **Command** a frightened target, take **+1d**."
+    },
+    {
+      "name": "Vigorous",
+      "class": "cutter",
+      "description": "You recover from harm faster. Permanently fill in one of your healing clock segments. Take **+1d** to healing treatment rolls."
+    },
+    {
+      "name": "Sharpshooter",
+      "class": "hound",
+      "description": "You can **push yourself** to do one of the following:\n- make a ranged attack at extreme distance beyond what’s normal for the weapon\n— unleash a barrage of rapid fire to suppress the enemy."
+    },
+    {
+      "name": "Focused",
+      "class": "hound",
+      "description": "You may expend your **special armor** to resist a consequence of surprise or mental harm (fear, confusion, losing track of someone) or to **push yourself** for ranged combat or tracking."
+    },
+    {
+      "name": "Ghost hound",
+      "class": "hound",
+      "description": "Your hunting pet is imbued with spirit energy. It gains **potency** when tracking or fighting the supernatural. It also gains a supernatural ability:\n- Ghost-form\n- Mind-link\n- Arrow-swift\nTake this ability again to gain another supernatural ability for your pet."
+    },
+    {
+      "name": "Scout",
+      "class": "hound",
+      "description": "When you gather information to discover the location of a target, you get **+1 effect**. When you hide in a prepared position or use camouflage you get **+1d** to rolls to avoid detection."
+    },
+    {
+      "name": "Tough as nails",
+      "class": "hound",
+      "description": "Penalties from harm are one level less severe (though level 4 harm is still fatal)."
+    },
+    {
+      "name": "Vengeful",
+      "class": "hound",
+      "description": "You gain an additional **xp trigger**: You got payback against someone who harmed you or someone you care about. If your crew helped you get payback, also mark crew xp."
+    },
+    {
+      "name": "Alchemist",
+      "class": "leech",
+      "description": "When you **invent** or **craft** a creation with alchemical features, you get **+1 result level** to your roll (a **1-3** becomes a **4/5**, etc.). You begin with one special formula already known."
+    },
+    {
+      "name": "Analyst",
+      "class": "leech",
+      "description": "During downtime, you get **two ticks** to distribute among any long term project clocks that involve investigation or learning a new formula or design plan."
+    },
+    {
+      "name": "Artificer",
+      "class": "leech",
+      "description": "When you **invent** or **craft** a creation with spark-craft features, you get **+1 result level** to your roll (a **1-3** becomes a **4/5**, etc.). You begin with one special design already known."
+    },
+    {
+      "name": "Fortitude",
+      "class": "leech",
+      "description": "You may expend your **special armor** to resist a consequence of fatigue, weakness, or chemical effects, or to **push yourself** when working with technical skill or handling alchemicals."
+    },
+    {
+      "name": "Supernatural Ward",
+      "class": "leech",
+      "description": "When you **Wreck** an area with arcane substances, ruining it for any other use, it becomes anathema or enticing to the supernatural (your choice)."
+    },
+    {
+      "name": "Saboteur",
+      "class": "leech",
+      "description": "When you **Wreck**, your work is much quieter than it should be and the damage is very well-hidden from casual inspection."
+    },
+    {
+      "name": "Venomous",
+      "class": "leech",
+      "description": "Choose a drug or poison (from your bandolier stock) to which you have become immune. You can **push yourself** to secrete it through your skin or saliva or exhale it as a vapor."
+    },
+    {
+      "name": "Infiltrator",
+      "class": "lurk",
+      "description": "You are not affected by **quality** or **tier** when you bypass security measures."
+    },
+    {
+      "name": "Ambush",
+      "class": "lurk",
+      "description": "When you attack from hiding or spring a trap you get **+1d**."
+    },
+    {
+      "name": "Daredevil",
+      "class": "lurk",
+      "description": "When you roll a desperate action, you get **+1d** to your roll if you also take **-1d** to any resistance rolls against consequences from your action."
+    },
+    {
+      "name": "The devil's footsteps",
+      "class": "lurk",
+      "description": "When you **push yourself**, choose one of the following additional benefits:\n- perform a feat of athletics that verges on the superhuman\n- manouver to confuse your enemies so they mistakenly attack each other"
+    },
+    {
+      "name": "Expertise",
+      "class": "lurk",
+      "description": "Choose one of your action ratings. When you lead a **group action** using that action you can suffer at most 1 stress."
+    },
+    {
+      "name": "Ghost veil",
+      "class": "lurk",
+      "description": "You may shift partially into the ghost field, becoming shadowy and insubstantial for a few moments. Take 2 stress when you shift, plus 1 stress for each extra feature:\n- It lasts for a few minutes rather than a few moments\n- You are invisible rather than shadowy\n- You can float through the air like a ghost"
+    },
+    {
+      "name": "Reflexes",
+      "class": "lurk",
+      "description": "When there's a question about who acts first the answer is you. (Two characters with Reflexes act simultaniously)"
+    },
+    {
+      "name": "Shadow",
+      "class": "lurk",
+      "description": "You may expend your **special armor** to resist a consequence from detection or security measures, or **push yourself** for a feat of athletics or stealth."
+    },
+    {
+      "name": "Rook's Gambit",
+      "class": "slide",
+      "description": "Take **2 stress** to roll your best action rating while performning a different action. Say how you adaot your skill to this use."
+    },
+    {
+      "name": "Cloak & Dagger",
+      "class": "slide",
+      "descirption": "WHen you use a disguise or other form of covert misdirection, you get **+1d** to rolls to confuse or deflect suspicion. When you throw off your disguise the resulting suprise gives you the initiative in the situation."
+    },
+    {
+      "name": "Ghost Voice",
+      "class": "slide",
+      "description": "You know the secret method to interact with a ghost or demon as if it was a normal human, regardless of how wild or feral it appears. You gain **potency** when communicating with the supernatural."
+    },
+    {
+      "name": "Like looking into a mirror",
+      "class": "slide",
+      "description": "You can always tell when someone is lying to you."
+    },
+    {
+      "name": "A little something on the side",
+      "class": "slide",
+      "description": "At the end of each downtime phase, you earn **+2 stash**."
+    },
+    {
+      "name": "Mesmerism",
+      "class": "slide",
+      "description": "When you **Sway** someone, you may cause them to forget that it's happened until they next interect with you."
+    },
+    {
+      "name": "Subterfuge",
+      "class": "slide",
+      "description": "You may expend your **special armor** to resist a consequence from suspicion pr persuasion, or to **push yourself** for subterfuge."
+    },
+    {
+      "name": "Trust in me",
+      "class": "slide",
+      "description": "You get **+1d** vs a target with whom you have an intimate relationship."
+    },
+    {
+      "name": "Foresight",
+      "class": "spider",
+      "description": "Two times per score you can **assist** a teammate without paying stress. Tell us how you prepared for this."
+    },
+    {
+      "name": "Calculating",
+      "class": "spider",
+      "description": "Due to your careful planning, during **downtime** you may give yourself or another crew member +1 downtime action."
+    },
+    {
+      "name": "Connected",
+      "class": "spider",
+      "description": "During downtime, you get **+1 result level** when you **aquire an asset** or **reduce heat**."
+    },
+    {
+      "name": "Functioning Vice",
+      "class": "spider",
+      "description": "WHen you indulge your vice, you may adjust the dice outcome by 1 or 2 (up or down). An ally who joins you in your vice may do the same."
+    },
+    {
+      "name": "Ghost Contract",
+      "class": "spider",
+      "description": "When you shake on a deal, you and your partner - human or otherwise - both bear a mark of your oath. If either breaks the contract they take level 3 harm, \"Cursed\"."
+    },
+    {
+      "name": "Jail Bird",
+      "class": "spider",
+      "description": "When **incarcerated**, your wanted level counts as 1 less, Your Tier as 1 more, and you gain +1 faction status with a faction you help on the inside (in addition to your incarceration roll)."
+    },
+    {
+      "name": "Mastermind",
+      "class": "spider",
+      "description": "You may expend your **special armor** to protect a teammate, or to **push yourself** when you gather information or work on a long-term project."
+    },
+    {
+      "name": "Weaving the Web",
+      "class": "spider",
+      "description": "You gain **+1d** to **Consort** when you **gather information on a target for a score. You get **+1d** to the **engagement roll** for that operation."
+    },
+    {
+      "name": "Compel",
+      "class": "whisper",
+      "description": "You can **Attune** to the ghost field to force a nearby ghost to appear and obey a command you give it. You are not supernaturally terrified by a ghost you summon or compel (though your allies may be)."
+    },
+    {
+      "name": "Ghost Mind",
+      "class": "whisper",
+      "description": "You're always aware of supernatural entities in your presence. Take **+1d** when you **gather info** about the supernatural."
+    },
+    {
+      "name": "Iron Will",
+      "class": "whisper",
+      "description": "You're immune to the terror that some supernatural entities inflict on sight. Take **+1d** to resistance rolls with **Resolve**."
+    },
+    {
+      "name": "Occultist",
+      "class": "whisper",
+      "description": "You know the secret ways to **Consort** with ancient powers. forgotten gods or demons. Once you've consorted with one, you get **+1d** to **command** cultists who worship it."
+    },
+    {
+      "name": "Ritual",
+      "class": "whisper",
+      "description": "You can **Study** an occult ritual (or create a new one) to summon a supernatural entity or being. You know the arcane methods to perform ritual sorcery. You begin with one ritual already laerned."
+    },
+    {
+      "name": "Strange Methods",
+      "class": "whisper",
+      "description": "When you invent or craft a creation with *arcane* features, take **+1 result level** to your roll. You begin with one arcane design already known."
+    },
+    {
+      "name": "Tempest",
+      "class": "whisper",
+      "description": "You can **Push yourself** to do one of the following:\n- unleash a stroke of lightning as a weapon\n- summon a storm in your immediate vicinity (torrential rain, roaring winds, heavy fog, chilling frost/snow etc.)."
+    },
+    {
+      "name": "Warded",
+      "class": "whisper",
+      "description": "You may expend your **special armor** to resist a supernatural consequence, or to **push yourself** when you deal with arcane forces."
+    }
+  ]
+}
