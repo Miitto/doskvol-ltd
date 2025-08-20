@@ -1,7 +1,8 @@
 data::blades!();
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct Character {
+    pub id: usize,
     pub name: String,
     pub class: Class,
     pub look: String,
@@ -18,7 +19,7 @@ pub struct Character {
     pub dots: Dots,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct XP {
     pub playbook: u8,
     pub insight: u8,
@@ -26,7 +27,7 @@ pub struct XP {
     pub resolve: u8,
 }
 
-#[derive(Debug, Clone, PartialEq, Default)]
+#[derive(Debug, Clone, PartialEq, Default, serde::Serialize, serde::Deserialize)]
 pub struct Dots {
     pub hunt: u8,
     pub study: u8,
@@ -42,7 +43,7 @@ pub struct Dots {
     pub sway: u8,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum Heritage {
     Akoros,
     TheDaggerIsles,
@@ -52,7 +53,7 @@ pub enum Heritage {
     Tycsheros,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum Background {
     Academic,
     Labor,
@@ -63,7 +64,7 @@ pub enum Background {
     Underworld,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum Vice {
     Faith,
     Gambling,
@@ -75,7 +76,7 @@ pub enum Vice {
 }
 
 bitflags::bitflags! {
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub struct Trauma: u8 {
     const COLD = 0b00000001;
     const HAUNTED = 0b00000010;
@@ -207,4 +208,3 @@ impl From<String> for Vice {
         }
     }
 }
-

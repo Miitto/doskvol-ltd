@@ -5,4 +5,5 @@ edition = "2024"
 
 [dependencies]
 data.workspace = true
-bitflags = "2.9"
+bitflags = { version = "2.9", features = ["serde"] }
+serde = { version = "1.0", features = ["derive"] }

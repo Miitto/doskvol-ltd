@@ -6,3 +6,5 @@ edition = "2021"
 [dependencies]
 dioxus = { workspace = true, features = ["fullstack"] }
 tracing.workspace = true
+
+types.workspace = true

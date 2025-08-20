@@ -53,6 +53,7 @@ version = "0.1.0"
 dependencies = [
  "dioxus",
  "tracing",
+ "types",
 ]
 
 [[package]]
@@ -895,6 +896,7 @@ dependencies = [
 name = "desktop"
 version = "0.1.0"
 dependencies = [
+ "api",
  "dioxus",
  "types",
  "ui",
@@ -5002,6 +5004,7 @@ version = "0.1.0"
 dependencies = [
  "bitflags 2.9.2",
  "data",
+ "serde",
 ]
 
 [[package]]

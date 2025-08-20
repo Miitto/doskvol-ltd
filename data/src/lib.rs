@@ -10,7 +10,7 @@ pub fn blades(_: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let count = playbook.len();
 
     quote::quote! {
-        #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+        #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
         pub enum Class {
             Cutter,
             Hound,
@@ -38,7 +38,7 @@ pub fn blades(_: proc_macro::TokenStream) -> proc_macro::TokenStream {
         pub mod playbook {
             use super::Class;
 
-            #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+            #[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
             pub struct Ability {
                 pub name: &'static str,
                 pub class: Class,
