@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["ui", "web", "desktop", "mobile", "api"]
+members = ["ui", "web", "desktop", "mobile", "api", "data", "types"]
 
 [workspace.dependencies]
 dioxus = { version = "0.6.0" }
@@ -10,6 +10,8 @@ tracing = "0.1.41"
 # workspace
 ui = { path = "ui" }
 api = { path = "api" }
+data = { path = "data" }
+types = { path = "types" }
 
 [profile]
 

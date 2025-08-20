@@ -1,10 +1,14 @@
 //! This crate contains all shared UI for the workspace.
+use dioxus::prelude::*;
 
-mod hero;
-pub use hero::Hero;
+mod character;
+pub use character::Character;
 
-mod navbar;
-pub use navbar::Navbar;
+const TAILWIND_CSS: Asset = asset!("/assets/tailwind.css");
 
-mod echo;
-pub use echo::Echo;
+#[component]
+pub fn Tailwind() -> Element {
+    rsx! {
+        document::Link { rel: "stylesheet", href: TAILWIND_CSS }
+    }
+}

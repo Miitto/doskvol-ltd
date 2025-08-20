@@ -851,6 +851,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "data"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "serde",
+ "serde_json",
+ "syn 2.0.106",
+]
+
+[[package]]
 name = "data-encoding"
 version = "2.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -885,6 +896,7 @@ name = "desktop"
 version = "0.1.0"
 dependencies = [
  "dioxus",
+ "types",
  "ui",
 ]
 
@@ -4985,6 +4997,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1dccffe3ce07af9386bfd29e80c0ab1a8205a2fc34e4bcd40364df902cfa8f3f"
 
 [[package]]
+name = "types"
+version = "0.1.0"
+dependencies = [
+ "bitflags 2.9.2",
+ "data",
+]
+
+[[package]]
 name = "uds_windows"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5001,6 +5021,7 @@ version = "0.1.0"
 dependencies = [
  "api",
  "dioxus",
+ "types",
 ]
 
 [[package]]

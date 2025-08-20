@@ -1,10 +1,50 @@
 use dioxus::prelude::*;
-use ui::{Echo, Hero};
+use ui::Character;
 
 #[component]
 pub fn Home() -> Element {
+    let character = types::Character {
+        name: "Lord Theodophilus Dalmore".to_string(),
+        class: types::Class::Slide,
+        look: "Affable, handsome, long scarf, waistcoat".into(),
+        abilities: vec![
+            "Cloak & Dagger".into(),
+            "Like looking into a mirror".into(),
+            "A little something on the side".into(),
+        ],
+        heritage: types::Heritage::Akoros,
+        background: types::Background::Noble,
+        vice: types::Vice::Luxury,
+        coin: 1,
+        stash: 10,
+        xp: types::XP {
+            playbook: 0,
+            insight: 0,
+            prowess: 0,
+            resolve: 0,
+        },
+        dots: types::Dots {
+            hunt: 0,
+            study: 0,
+            survey: 0,
+            tinker: 0,
+            finesse: 3,
+            prowl: 3,
+            skirmish: 1,
+            wreck: 0,
+            attune: 0,
+            command: 0,
+            consort: 0,
+            sway: 0,
+        },
+        stress: 3,
+        trauma: 0,
+        traumas: types::Trauma::empty(),
+    };
+
+    let character = use_signal(|| character);
+
     rsx! {
-        Hero {}
-        Echo {}
+        ui::Character { character }
     }
 }
