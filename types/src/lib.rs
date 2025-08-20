@@ -1,19 +1,24 @@
+use crate::description::Description;
+
 data::blades!();
+
+mod bitflag_count;
+pub use bitflag_count::BitCount;
+pub mod description;
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct Character {
     pub id: usize,
     pub name: String,
     pub class: Class,
-    pub look: String,
+    pub look: Description<String>,
     pub heritage: Heritage,
     pub background: Background,
     pub vice: Vice,
     pub abilities: Vec<String>,
     pub stash: u8,
     pub stress: u8,
-    pub trauma: u8,
-    pub traumas: Trauma,
+    pub trauma: TraumaFlags,
     pub coin: u8,
     pub xp: XP,
     pub dots: Dots,
@@ -43,7 +48,7 @@ pub struct Dots {
     pub sway: u8,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum Heritage {
     Akoros,
     TheDaggerIsles,
@@ -53,7 +58,7 @@ pub enum Heritage {
     Tycsheros,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum Background {
     Academic,
     Labor,
@@ -64,7 +69,7 @@ pub enum Background {
     Underworld,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum Vice {
     Faith,
     Gambling,
@@ -75,9 +80,21 @@ pub enum Vice {
     Weird,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+pub enum Trauma {
+    Cold,
+    Haunted,
+    Obsessed,
+    Paranoid,
+    Relentless,
+    Soft,
+    Unstable,
+    Vicious,
+}
+
 bitflags::bitflags! {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
-pub struct Trauma: u8 {
+pub struct TraumaFlags: u8 {
     const COLD = 0b00000001;
     const HAUNTED = 0b00000010;
     const OBSESSED = 0b00000100;
@@ -205,6 +222,49 @@ impl From<String> for Vice {
             "Stupor" => Vice::Stupor,
             "Weird" => Vice::Weird,
             _ => panic!("Unknown vice: {s}"),
+        }
+    }
+}
+
+impl Trauma {
+    pub const ALL: [Trauma; 8] = [
+        Trauma::Cold,
+        Trauma::Haunted,
+        Trauma::Obsessed,
+        Trauma::Paranoid,
+        Trauma::Relentless,
+        Trauma::Soft,
+        Trauma::Unstable,
+        Trauma::Vicious,
+    ];
+}
+
+impl From<Trauma> for TraumaFlags {
+    fn from(trauma: Trauma) -> Self {
+        match trauma {
+            Trauma::Cold => TraumaFlags::COLD,
+            Trauma::Haunted => TraumaFlags::HAUNTED,
+            Trauma::Obsessed => TraumaFlags::OBSESSED,
+            Trauma::Paranoid => TraumaFlags::PARANOID,
+            Trauma::Relentless => TraumaFlags::RELENTLESS,
+            Trauma::Soft => TraumaFlags::SOFT,
+            Trauma::Unstable => TraumaFlags::UNSTABLE,
+            Trauma::Vicious => TraumaFlags::VICIOUS,
+        }
+    }
+}
+
+impl std::fmt::Display for Trauma {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Trauma::Cold => write!(f, "Cold"),
+            Trauma::Haunted => write!(f, "Haunted"),
+            Trauma::Obsessed => write!(f, "Obsessed"),
+            Trauma::Paranoid => write!(f, "Paranoid"),
+            Trauma::Relentless => write!(f, "Relentless"),
+            Trauma::Soft => write!(f, "Soft"),
+            Trauma::Unstable => write!(f, "Unstable"),
+            Trauma::Vicious => write!(f, "Vicious"),
         }
     }
 }

@@ -7,3 +7,4 @@ edition = "2024"
 data.workspace = true
 bitflags = { version = "2.9", features = ["serde"] }
 serde = { version = "1.0", features = ["derive"] }
+tracing.workspace = true

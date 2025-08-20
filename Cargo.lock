@@ -5005,6 +5005,7 @@ dependencies = [
  "bitflags 2.9.2",
  "data",
  "serde",
+ "tracing",
 ]
 
 [[package]]
@@ -5024,6 +5025,7 @@ version = "0.1.0"
 dependencies = [
  "api",
  "dioxus",
+ "tracing",
  "types",
 ]
 

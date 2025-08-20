@@ -42,7 +42,7 @@ pub fn blades(_: proc_macro::TokenStream) -> proc_macro::TokenStream {
             pub struct Ability {
                 pub name: &'static str,
                 pub class: Class,
-                pub description: &'static str,
+                pub description: super::Description<&'static str>,
             }
 
             pub const PLAYBOOK: [Ability; #count] = [
@@ -77,7 +77,7 @@ impl quote::ToTokens for PlaybookAbility {
             Ability {
                 name: #name,
                 class: #class,
-                description: #description,
+                description: super::Description::new(#description),
             }
         });
     }

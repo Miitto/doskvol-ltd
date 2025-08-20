@@ -40,8 +40,7 @@ pub async fn get_character(id: usize) -> Result<types::Character, ServerFnError>
             sway: 0,
         },
         stress: 3,
-        trauma: 0,
-        traumas: types::Trauma::empty(),
+        trauma: types::TraumaFlags::empty(),
     };
 
     Ok(character)
