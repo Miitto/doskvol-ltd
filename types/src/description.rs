@@ -5,6 +5,7 @@ pub enum Segment {
     Text(String),
     Italic(String),
     Bold(String),
+    Newline,
 }
 
 impl<T: std::fmt::Display> Description<T> {
@@ -19,7 +20,10 @@ impl<T: std::fmt::Display> Description<T> {
         let mut chars = string.chars().peekable();
 
         let mut start = String::new();
-        while chars.peek().is_some_and(|&char| char != '*') {
+        while chars
+            .peek()
+            .is_some_and(|&char| char != '*' && char != '\n')
+        {
             start.push(chars.next().unwrap());
         }
 
@@ -61,6 +65,9 @@ impl<T: std::fmt::Display> Description<T> {
                                         Segment::Bold(txt) => {
                                             txt.push('*');
                                         }
+                                        Segment::Newline => {
+                                            segments.push(Segment::Text("*".to_string()));
+                                        }
                                     }
                                 }
                                 segments.push(Segment::Italic(text));
@@ -69,14 +76,30 @@ impl<T: std::fmt::Display> Description<T> {
                             segments.push(Segment::Italic(text));
                         }
                         break;
+                    } else if next_char == '\n' {
+                        segments.push(Segment::Text(text.clone()));
+                        segments.push(Segment::Newline);
+                        text.clear();
                     } else {
                         text.push(next_char);
                     }
                 }
             } else {
-                let mut text = String::from(char);
+                let mut text = String::new();
+                if char == '\n' {
+                    segments.push(Segment::Newline);
+                } else {
+                    text.push(char);
+                }
                 while chars.peek().is_some_and(|&char| char != '*') {
-                    text.push(chars.next().unwrap());
+                    let char = chars.next().unwrap();
+                    if char == '\n' {
+                        segments.push(Segment::Text(text.clone()));
+                        segments.push(Segment::Newline);
+                        text.clear();
+                    } else {
+                        text.push(char);
+                    }
                 }
                 segments.push(Segment::Text(text));
             }

@@ -1,27 +1,28 @@
 use dioxus::prelude::*;
-use types::BitCount;
+use types::{ArmorFlags, BitCount};
 
-use crate::elements::Description;
+use crate::common::CountBtn;
+use crate::elements::{Description, DescriptionEdit};
 
 #[component]
 pub fn Character(character: types::Character, readonly: Option<bool>) -> Element {
     let character = use_signal(|| character);
 
-    let editing = use_signal(|| !readonly.unwrap_or(true));
+    let readonly = use_memo(move || !readonly.unwrap_or(true));
 
     rsx! {
         div { class: "flex flex-col lg:flex-row h-full",
-            Left { editing, character }
-            div { class: "bg-border h-px w-full md:w-px md:h-full" }
+            Left { readonly, character }
+            div { class: "bg-border min-h-px h-px w-full lg:w-px lg:h-full" }
             Center { character }
-            div { class: "bg-border h-px w-full md:w-px md:h-full" }
-            Right { character, editing }
+            div { class: "bg-border min-h-px h-px w-full lg:w-px lg:h-full" }
+            Right { character, readonly }
         }
     }
 }
 
 #[component]
-fn Left(editing: ReadOnlySignal<bool>, mut character: Signal<types::Character>) -> Element {
+fn Left(readonly: ReadOnlySignal<bool>, mut character: Signal<types::Character>) -> Element {
     let name = use_signal(|| character().name);
     let look = use_signal(|| character().look);
     let heritage = use_memo(move || character().heritage);
@@ -30,10 +31,10 @@ fn Left(editing: ReadOnlySignal<bool>, mut character: Signal<types::Character>) 
     let stress = use_memo(move || character().stress);
 
     rsx! {
-        div { class: "flex flex-col gap-2 w-fit p-4",
+        div { class: "flex flex-col gap-2 flex-auto p-4 pb-2 lg:pr-2 lg:pb-4",
             h2 { class: "block text-4xl w-max", "{name}" }
-            if editing() {
-                input { value: "{look}" }
+            if readonly() {
+                input { class: "p-1", value: "{look}" }
             } else {
                 Description { desc: look() }
             }
@@ -44,7 +45,7 @@ fn Left(editing: ReadOnlySignal<bool>, mut character: Signal<types::Character>) 
                 DropdownList {
                     name: "Herritage",
                     value: "{heritage}",
-                    readonly: !editing(),
+                    readonly: !readonly(),
                     set: move |h| {
                         character
                             .with_mut(|char| {
@@ -58,7 +59,7 @@ fn Left(editing: ReadOnlySignal<bool>, mut character: Signal<types::Character>) 
                 DropdownList {
                     name: "Background",
                     value: "{background}",
-                    readonly: !editing(),
+                    readonly: !readonly(),
                     set: move |b| {
                         character
                             .with_mut(|char| {
@@ -72,7 +73,7 @@ fn Left(editing: ReadOnlySignal<bool>, mut character: Signal<types::Character>) 
                 DropdownList {
                     name: "Vice",
                     value: "{vice}",
-                    readonly: !editing(),
+                    readonly: !readonly(),
                     set: move |v| {
                         character
                             .with_mut(|char| {
@@ -87,113 +88,115 @@ fn Left(editing: ReadOnlySignal<bool>, mut character: Signal<types::Character>) 
 
             hr { class: "my-2" }
             div { class: "flex flex-col gap-2 justify-between",
+                div { class: "flex flex-row gap-2 items-center justify-between",
+                    div {
+                        span { "Stress" }
+                        span { class: "flex flex-row gap-1 items-center",
+                            for i in 0..9 {
+                                CountBtn {
+                                    this: i,
+                                    total: stress(),
+                                    readonly: !readonly(),
+                                    set: move |s| {
+                                        character
+                                            .with_mut(|char| {
+                                                char.stress = s;
+                                            });
+                                    },
+                                }
+                            }
+                        }
+                    }
+                    div {
+                        span { "Trauma" }
+                        span { class: "flex flex-row gap-1 items-center",
+                            for i in 0..4 {
+                                CountBtn {
+                                    this: i,
+                                    total: character().trauma.count_bits(),
+                                    readonly: true,
+                                    set: |_| {},
+                                }
+                            }
+                        }
+                    }
+                }
+                div { class: "flex flex-row flex-wrap gap-2 items-center justify-center",
+                    for trauma in types::Trauma::ALL {
+                        Trauma { trauma, character }
+                    }
+                }
+            }
+            hr { class: "my-2" }
+            Harm { character }
+
             div {
-                class: "flex flex-row gap-2 items-center justify-between",
-                div {
-                    span { "Stress" }
-                    span { class: "flex flex-row gap-1 items-center",
-                        for i in 0..9 {
+                class: "flex flex-row flex-wrap justify-between gap-4 items-center",
+                div { class: "flex flex-row gap-2 items-center",
+                    span { "Healing" }
+                    div { class: "flex flex-row gap-1 items-center",
+                        for i in 0..4 {
                             CountBtn {
                                 this: i,
-                                total: stress(),
-                                readonly: !editing(),
-                                set: move |s| {
+                                total: character().healing,
+                                set: move |h| {
                                     character
                                         .with_mut(|char| {
-                                            char.stress = s;
+                                            char.healing = h;
                                         });
                                 },
                             }
                         }
                     }
                 }
-                div {
-                    span { "Trauma" }
-                    span { class: "flex flex-row gap-1 items-center",
-                        for i in 0..4 {
-                            CountBtn {
-                                this: i,
-                                total: character().trauma.count_bits(),
-                                readonly: true,
-                                set: |_| {}
-                            }
+                div { class: "flex flex-row gap-4 items-center",
+                    div { class: "flex flex-row gap-2 items-center",
+                        span { "Armour" }
+                        CountBtn {
+                            this: if character().armor.contains(ArmorFlags::ARMOR) { 0 } else { 1 },
+                            total: 1,
+                            set: move |_| {
+                                character.with_mut(|char| { char.armor.toggle(ArmorFlags::ARMOR) });
+                            },
+                        }
+                    }
+                    div { class: "flex flex-row gap-2 items-center",
+                        span { "Heavy" }
+                        CountBtn {
+                            this: if character().armor.contains(ArmorFlags::HEAVY) { 0 } else { 1 },
+                            total: 1,
+                            set: move |_| {
+                                character.with_mut(|char| { char.armor.toggle(ArmorFlags::HEAVY) });
+                            },
+                        }
+                    }
+                    div { class: "flex flex-row gap-2 items-center",
+                        span { "Special" }
+                        CountBtn {
+                            this: if character().armor.contains(ArmorFlags::SPECIAL) { 0 } else { 1 },
+                            total: 1,
+                            set: move |_| {
+                                character.with_mut(|char| { char.armor.toggle(ArmorFlags::SPECIAL) });
+                            },
                         }
                     }
                 }
-            }
-            div {
-            class: "flex flex-row flex-wrap gap-2 items-center justify-center",
-                for trauma in types::Trauma::ALL {
-                    Trauma { trauma, character }
-                }
-            }
             }
             hr { class: "my-2" }
-        }
-    }
-}
 
-#[component]
-fn Trauma(
-    trauma: types::Trauma,
-    readonly: Option<bool>,
-    character: Signal<types::Character>,
-) -> Element {
-    let has_trauma = use_memo(move || character().trauma.contains(trauma.into()));
-
-    let bg_color = if has_trauma() {
-        "bg-destructive hover:bg-destructive/40 text-destructive-foreground"
-    } else {
-        "bg-input hover:bg-input/40"
-    };
-
-    rsx! {
-            button {
-                class: "cursor-pointer rounded-lg px-2 py-1 {bg_color}",
-                onclick: move |_| {
-                    if readonly.unwrap_or(false) {
-                        return;
-                    }
+            div {
+                class: "flex flex-col gap-2",
+                span { class: "text-lg underline", "Notes" }
+            DescriptionEdit {
+                desc: character().notes,
+                readonly: !readonly(),
+                on_change: move |desc| {
                     character.with_mut(|char| {
-                        if has_trauma() {
-                            char.trauma.remove(trauma.into());
-                        } else {
-                            char.trauma.insert(trauma.into());
-                        }
+                        char.notes = desc;
                     });
                 },
-               "{trauma}"
             }
-    }
-}
-
-#[component]
-fn CountBtn(this: u8, total: u8, readonly: Option<bool>, set: EventHandler<u8>) -> Element {
-    let class = if this < total {
-        "bg-gray-300"
-    } else {
-        "bg-gray-500"
-    };
-
-    let hover_class = if readonly.unwrap_or(false) {
-        "cursor-not-allowed"
-    } else {
-        "hover:bg-gray-400"
-    };
-
-    rsx! {
-        button {
-            class: "h-5 aspect-square {hover_class} {class}",
-            onclick: move |_| {
-                if readonly.unwrap_or(false) {
-                    return;
-                }
-                if this + 1 != total {
-                    set(this + 1);
-                } else {
-                    set(0);
-                }
-            },
+            }
         }
     }
 }
@@ -211,7 +214,7 @@ fn Center(character: Signal<types::Character>) -> Element {
             .collect::<Vec<_>>()
     });
     rsx! {
-        div { class: "flex flex-col gap-2 w-fit p-4",
+        div { class: "flex flex-col gap-2 flex-auto p-4 pb-2 pt-2 lg:pr-2 lg:pb-4 lg:pt-4 lg:pl-2",
             h1 { class: "text-6xl", "{class}" }
             for ability in abilities() {
                 Ability { ability: ability.clone() }
@@ -221,17 +224,17 @@ fn Center(character: Signal<types::Character>) -> Element {
 }
 
 #[component]
-fn Right(editing: ReadOnlySignal<bool>, character: Signal<types::Character>) -> Element {
+fn Right(readonly: ReadOnlySignal<bool>, character: Signal<types::Character>) -> Element {
     let coin = use_memo(move || character().coin);
     let stash = use_memo(move || character().stash);
     rsx! {
-        div { class: "flex flex-row gap-2 w-fit p-4 h-32 shrink ml-auto",
+        div { class: "flex flex-row gap-2 flex-auto lg:max-w-fit h-32 shrink p-4 pt-2 lg:pl-2 lg:pt-4",
             div { class: "flex flex-col w-fit h-fit",
                 span { "Stash " }
                 span { "Coin" }
                 Coin {
                     coin,
-                    readonly: !editing(),
+                    readonly: !readonly(),
                     set: move |c| {
                         character
                             .with_mut(|char| {
@@ -242,7 +245,7 @@ fn Right(editing: ReadOnlySignal<bool>, character: Signal<types::Character>) -> 
             }
             Stash {
                 stash,
-                readonly: !editing(),
+                readonly: !readonly(),
                 set: move |s| {
                     character
                         .with_mut(|c| {
@@ -250,19 +253,6 @@ fn Right(editing: ReadOnlySignal<bool>, character: Signal<types::Character>) -> 
                         });
                 },
             }
-        }
-    }
-}
-
-#[component]
-fn Ability(ability: types::playbook::Ability) -> Element {
-    rsx! {
-        div { class: "flex flex-col gap-1",
-            span { class: "flex flex-row gap-2 items-center justify-between",
-                h2 { class: "text-2xl w-fit underline", "{ability.name}" }
-                p { class: "italic", "{ability.class}" }
-            }
-            Description { desc: ability.description }
         }
     }
 }
@@ -291,6 +281,103 @@ fn DropdownList<T: std::fmt::Display + Clone + PartialEq + From<String> + 'stati
                     {children}
                 }
             }
+        }
+    }
+}
+
+#[component]
+fn Trauma(
+    trauma: types::Trauma,
+    readonly: Option<bool>,
+    character: Signal<types::Character>,
+) -> Element {
+    let has_trauma = use_memo(move || character().trauma.contains(trauma.into()));
+
+    let bg_color = if has_trauma() {
+        "bg-destructive hover:bg-destructive/40 text-destructive-foreground"
+    } else {
+        "bg-input hover:bg-input/40"
+    };
+
+    rsx! {
+        button {
+            class: "cursor-pointer rounded-lg px-2 py-1 {bg_color}",
+            onclick: move |_| {
+                if readonly.unwrap_or(false) {
+                    return;
+                }
+                character
+                    .with_mut(|char| {
+                        if has_trauma() {
+                            char.trauma.remove(trauma.into());
+                        } else {
+                            char.trauma.insert(trauma.into());
+                        }
+                    });
+            },
+            "{trauma}"
+        }
+    }
+}
+
+#[component]
+fn Harm(character: Signal<types::Character>) -> Element {
+    let harm = use_memo(move || character().harm);
+
+    rsx! {
+        div { class: "grid grid-cols-[auto_1fr_auto]",
+            HarmLine { num: 3, state: "Need Help",
+                input {
+                    class: "w-full h-full p-1 outline-hidden focus:outline-1 focus:outline-foreground focus:outline-solid focus:-outline-offset-1",
+                    value: harm().2,
+                }
+            }
+            HarmLine { num: 2, state: "-1D",
+                input {
+                    class: "w-full h-full p-1 outline-hidden focus:outline-1 focus:outline-foreground focus:outline-solid focus:-outline-offset-1",
+                    value: "{harm().1[0]}",
+                }
+                div { class: "bg-border w-px h-full" }
+                input {
+                    class: "w-full h-full p-1 outline-hidden focus:outline-1 focus:outline-foreground focus:outline-solid focus:-outline-offset-1",
+                    value: "{harm().1[1]}",
+                }
+            }
+            HarmLine { num: 1, state: "Less Effect",
+                input {
+                    class: "w-full h-full p-1 outline-hidden focus:outline-1 focus:outline-foreground focus:outline-solid focus:-outline-offset-1",
+                    value: "{harm().0[0]}",
+                }
+                div { class: "bg-border w-px h-full" }
+                input {
+                    class: "w-full h-full p-1 outline-hidden focus:outline-1 focus:outline-foreground focus:outline-solid focus:-outline-offset-1",
+                    value: "{harm().0[1]}",
+                }
+            }
+        }
+    }
+}
+
+#[component]
+fn HarmLine(num: u8, state: &'static str, children: Element) -> Element {
+    rsx! {
+        div { class: "grid grid-cols-subgrid col-span-3 border-b border-border first:border-t",
+            span { class: "text-sm p-1 bg-neutral-800 h-full", "{num}" }
+            div { class: "flex flex-row grow w-full", {children} }
+            span { class: "text-sm p-1 grow text-wrap h-full bg-neutral-800 text-end", "{state}" }
+        }
+    }
+}
+
+#[component]
+fn Ability(ability: types::playbook::Ability) -> Element {
+    rsx! {
+        div { class: "flex flex-col gap-1",
+            span { class: "flex flex-row gap-2 items-center justify-between",
+                h2 { class: "text-2xl w-fit underline", "{ability.name}" }
+                p { class: "italic", "{ability.class}" }
+            }
+            Description { desc: ability.description }
         }
     }
 }

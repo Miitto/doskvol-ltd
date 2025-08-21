@@ -41,6 +41,17 @@ pub async fn get_character(id: usize) -> Result<types::Character, ServerFnError>
         },
         stress: 3,
         trauma: types::TraumaFlags::empty(),
+        harm: types::Harm::default(),
+        healing: 1,
+        armor: types::ArmorFlags::ARMOR,
+        notes: types::Description::new("Nyryx scares me\nhelp".into()),
+        contacts: types::Contacts {
+            friends: vec!["Nyryx, a prostitute".to_string()],
+            rivals: vec!["Bazso Baz, a gang leader".to_string()],
+        },
+        class_items: vec![],
+        load: None,
+        items: vec![],
     };
 
     Ok(character)

@@ -1,27 +1,51 @@
-use crate::description::Description;
-
-data::blades!();
-
 mod bitflag_count;
 pub use bitflag_count::BitCount;
 pub mod description;
+pub use crate::description::Description;
+
+data::blades!();
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct Character {
     pub id: usize,
     pub name: String,
-    pub class: Class,
     pub look: Description<String>,
     pub heritage: Heritage,
     pub background: Background,
     pub vice: Vice,
-    pub abilities: Vec<String>,
-    pub stash: u8,
     pub stress: u8,
     pub trauma: TraumaFlags,
+    pub harm: Harm,
+    pub healing: u8,
+    pub armor: ArmorFlags,
+    pub notes: Description<String>,
+    pub class: Class,
+    pub abilities: Vec<String>,
+    pub contacts: Contacts,
+    pub class_items: Vec<String>,
+    pub stash: u8,
     pub coin: u8,
     pub xp: XP,
     pub dots: Dots,
+    pub load: Option<Load>,
+    pub items: Vec<String>,
+}
+#[derive(Debug, Clone, PartialEq, Default, serde::Serialize, serde::Deserialize)]
+pub struct Harm(pub [String; 2], pub [String; 2], pub String);
+
+bitflags::bitflags! {
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+    pub struct ArmorFlags: u8 {
+        const ARMOR = 0b001;
+        const HEAVY = 0b010;
+        const SPECIAL = 0b100;
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+pub struct Contacts {
+    pub friends: Vec<String>,
+    pub rivals: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
@@ -46,6 +70,13 @@ pub struct Dots {
     pub command: u8,
     pub consort: u8,
     pub sway: u8,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+pub enum Load {
+    Light,
+    Medium,
+    Heavy,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]

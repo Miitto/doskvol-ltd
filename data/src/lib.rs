@@ -7,7 +7,11 @@ pub fn blades(_: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
     let playbook = playbook.playbook;
 
-    let count = playbook.len();
+    let playbook_count = playbook.len();
+
+    let class_items_str = include_str!("../blades/class_items.json");
+    let class_items: ClassItems =
+        serde_json::from_str(class_items_str).expect("Failed to parse class items JSON");
 
     quote::quote! {
         #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
@@ -45,14 +49,41 @@ pub fn blades(_: proc_macro::TokenStream) -> proc_macro::TokenStream {
                 pub description: super::Description<&'static str>,
             }
 
-            pub const PLAYBOOK: [Ability; #count] = [
+            pub const PLAYBOOK: [Ability; #playbook_count] = [
                 #(
                     #playbook
                 ),*
             ];
         }
+
+        pub mod items {
+            #class_items
+        }
     }
     .into()
+}
+
+#[derive(Debug, serde::Deserialize)]
+#[serde(rename_all = "lowercase")]
+enum Class {
+    Cutter,
+    Hound,
+    Leech,
+    Lurk,
+    Slide,
+    Spider,
+    Whisper,
+}
+
+impl quote::ToTokens for Class {
+    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
+        let string = format!("{self:?}");
+        let ident = quote::format_ident!("{}", string);
+
+        tokens.extend(quote::quote! {
+            Class::#ident
+        });
+    }
 }
 
 #[derive(Debug, serde::Deserialize)]
@@ -84,24 +115,69 @@ impl quote::ToTokens for PlaybookAbility {
 }
 
 #[derive(Debug, serde::Deserialize)]
-#[serde(rename_all = "lowercase")]
-enum Class {
-    Cutter,
-    Hound,
-    Leech,
-    Lurk,
-    Slide,
-    Spider,
-    Whisper,
+struct ClassItems {
+    cutter: Vec<String>,
+    hound: Vec<String>,
+    leech: Vec<String>,
+    lurk: Vec<String>,
+    slide: Vec<String>,
+    spider: Vec<String>,
+    whisper: Vec<String>,
 }
 
-impl quote::ToTokens for Class {
+impl quote::ToTokens for ClassItems {
     fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
-        let string = format!("{self:?}");
-        let ident = quote::format_ident!("{}", string);
+        let cutter = &self.cutter;
+        let hound = &self.hound;
+        let leech = &self.leech;
+        let lurk = &self.lurk;
+        let slide = &self.slide;
+        let spider = &self.spider;
+        let whisper = &self.whisper;
+
+        let cutter_count = cutter.len();
+        let hound_count = hound.len();
+        let leech_count = leech.len();
+        let lurk_count = lurk.len();
+        let slide_count = slide.len();
+        let spider_count = spider.len();
+        let whisper_count = whisper.len();
 
         tokens.extend(quote::quote! {
-            Class::#ident
+        #[derive(Debug)]
+        struct ClassItems {
+            pub cutter: [super::Description<&'static str>; #cutter_count],
+            pub hound: [super::Description<&'static str>; #hound_count],
+            pub leech: [super::Description<&'static str>; #leech_count],
+            pub lurk: [super::Description<&'static str>; #lurk_count],
+            pub slide: [super::Description<&'static str>; #slide_count],
+            pub spider: [super::Description<&'static str>; #spider_count],
+            pub whisper: [super::Description<&'static str>; #whisper_count],
+        }
+
+        const CLASS_ITEMS: ClassItems = ClassItems {
+            cutter: [#(
+                        super::Description::new(#cutter)
+                        ),*],
+            hound: [#(
+                        super::Description::new(#hound)
+                        ),*],
+            leech: [#(
+                        super::Description::new(#leech)
+                        ),*],
+            lurk: [#(
+                        super::Description::new(#lurk)
+                        ),*],
+            slide: [#(
+                        super::Description::new(#slide)
+                        ),*],
+            spider: [#(
+                        super::Description::new(#spider)
+                        ),*],
+            whisper: [#(
+                        super::Description::new(#whisper)
+                        ),*],
+        };
         });
     }
 }

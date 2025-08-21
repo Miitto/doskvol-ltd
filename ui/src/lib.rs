@@ -1,6 +1,7 @@
 //! This crate contains all shared UI for the workspace.
 use dioxus::prelude::*;
 
+pub mod common;
 pub mod elements;
 
 mod character;
