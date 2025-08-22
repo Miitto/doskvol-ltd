@@ -13,6 +13,10 @@ pub fn blades(_: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let class_items: ClassItems =
         serde_json::from_str(class_items_str).expect("Failed to parse class items JSON");
 
+    let contacts_str = include_str!("../blades/contacts.json");
+    let contacts: Contacts =
+        serde_json::from_str(contacts_str).expect("Failed to parse contacts JSON");
+
     quote::quote! {
         #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
         pub enum Class {
@@ -58,6 +62,10 @@ pub fn blades(_: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
         pub mod items {
             #class_items
+        }
+
+        pub mod contacts {
+            #contacts
         }
     }
     .into()
@@ -145,7 +153,7 @@ impl quote::ToTokens for ClassItems {
 
         tokens.extend(quote::quote! {
         #[derive(Debug)]
-        struct ClassItems {
+        pub struct ClassItems {
             pub cutter: [super::Description<&'static str>; #cutter_count],
             pub hound: [super::Description<&'static str>; #hound_count],
             pub leech: [super::Description<&'static str>; #leech_count],
@@ -155,7 +163,7 @@ impl quote::ToTokens for ClassItems {
             pub whisper: [super::Description<&'static str>; #whisper_count],
         }
 
-        const CLASS_ITEMS: ClassItems = ClassItems {
+        pub const CLASS_ITEMS: ClassItems = ClassItems {
             cutter: [#(
                         super::Description::new(#cutter)
                         ),*],
@@ -177,6 +185,61 @@ impl quote::ToTokens for ClassItems {
             whisper: [#(
                         super::Description::new(#whisper)
                         ),*],
+        };
+        });
+    }
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct Contacts {
+    cutter: Vec<String>,
+    hound: Vec<String>,
+    leech: Vec<String>,
+    lurk: Vec<String>,
+    slide: Vec<String>,
+    spider: Vec<String>,
+    whisper: Vec<String>,
+}
+
+impl quote::ToTokens for Contacts {
+    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
+        let cutter = &self.cutter;
+        let hound = &self.hound;
+        let leech = &self.leech;
+        let lurk = &self.lurk;
+        let slide = &self.slide;
+        let spider = &self.spider;
+        let whisper = &self.whisper;
+
+        let cutter_count = cutter.len();
+        let hound_count = hound.len();
+        let leech_count = leech.len();
+        let lurk_count = lurk.len();
+        let slide_count = slide.len();
+        let spider_count = spider.len();
+        let whisper_count = whisper.len();
+
+        tokens.extend(quote::quote! {
+
+        #[derive(Debug)]
+        pub struct ClassContacts {
+            pub cutter: [&'static str; #cutter_count],
+            pub hound: [&'static str; #hound_count],
+            pub leech: [&'static str; #leech_count],
+            pub lurk: [&'static str; #lurk_count],
+            pub slide: [&'static str; #slide_count],
+            pub spider: [&'static str; #spider_count],
+            pub whisper: [&'static str; #whisper_count],
+        }
+
+        pub const CONTACTS: ClassContacts = ClassContacts {
+            cutter: [#(#cutter),*],
+            hound: [#(#hound),*],
+            leech: [#(#leech),*],
+            lurk: [#(#lurk),*],
+            slide: [#(#slide),*],
+            spider: [#(#spider),*],
+            whisper: [#(#whisper),*],
         };
         });
     }

@@ -30,3 +30,21 @@ pub fn CountBtn(this: u8, total: u8, readonly: Option<bool>, set: EventHandler<u
         }
     }
 }
+
+#[component]
+pub fn ItemChecked(
+    checked: bool,
+    onclick: EventHandler<bool>,
+    readonly: ReadOnlySignal<bool>,
+) -> Element {
+    rsx! {
+        CountBtn {
+            this: if checked { 0 } else { 1 },
+            total: 1,
+            readonly: readonly(),
+            set: move |_| {
+                onclick.call(!checked);
+            },
+        }
+    }
+}

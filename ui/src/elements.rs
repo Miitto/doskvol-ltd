@@ -17,7 +17,7 @@ pub fn Description<T: std::fmt::Display + 'static + PartialEq>(desc: DT<T>) -> E
                 } else if let Segment::Newline = seg {
                     br {}
                 } else {
-                    // Handle other segment types if needed
+
                 }
             }
         }
@@ -35,37 +35,37 @@ pub fn DescriptionEdit(
     let mut editing = use_signal(|| false);
 
     rsx! {
-        div {
-            class: "flex flex-col",
-        if editing() {
-            textarea {
-                class: "w-full h-32 p-2 border border-border rounded",
-                autofocus: true,
-                value: desc.to_string(),
-                oninput: move |e| {
-                    let new_desc = DT::new(e.value());
-                    on_change.call(new_desc);
-                },
-                onblur: move |_| {
-                    editing.set(false);
-                },
-                onmounted: move |cx| async move {_ = cx.set_focus(true).await;}
-            }
-        } else {
-            Description { desc }
-            if !readonly {
-                div {
-                    class: "flex justify-end",
-                button {
-                    class: "bg-blue-700 rounded p-2",
-                    onclick: move |_| {
-                        editing.set(true);
+        div { class: "flex flex-col",
+            if editing() {
+                textarea {
+                    class: "w-full h-32 p-2 border border-border rounded",
+                    autofocus: true,
+                    value: desc.to_string(),
+                    oninput: move |e| {
+                        let new_desc = DT::new(e.value());
+                        on_change.call(new_desc);
                     },
-                    "Edit"
+                    onblur: move |_| {
+                        editing.set(false);
+                    },
+                    onmounted: move |cx| async move {
+                        _ = cx.set_focus(true).await;
+                    },
                 }
+            } else {
+                Description { desc }
+                if !readonly {
+                    div { class: "flex justify-end",
+                        button {
+                            class: "cursor-pointer bg-primary text-primary-foreground rounded-lg p-2 px-4",
+                            onclick: move |_| {
+                                editing.set(true);
+                            },
+                            "Edit"
+                        }
+                    }
                 }
             }
-        }
         }
     }
 }

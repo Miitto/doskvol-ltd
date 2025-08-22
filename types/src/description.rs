@@ -126,3 +126,17 @@ impl<T: std::fmt::Display> std::fmt::Display for Description<T> {
         write!(f, "{}", self.0)
     }
 }
+
+impl<T: std::fmt::Display> PartialEq<String> for Description<T> {
+    fn eq(&self, other: &String) -> bool {
+        let s = self.to_string();
+        s == *other
+    }
+}
+
+impl<T: std::fmt::Display> PartialEq<Description<T>> for String {
+    fn eq(&self, other: &Description<T>) -> bool {
+        let s = other.to_string();
+        s == *self
+    }
+}
