@@ -51,7 +51,7 @@ pub async fn get_character(id: usize) -> Result<types::Character, ServerFnError>
         },
         class_items: vec![],
         load: None,
-        items: vec![],
+        items: types::Items::empty(),
     };
 
     Ok(character)

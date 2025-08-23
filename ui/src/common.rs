@@ -11,7 +11,7 @@ pub fn CountBtn(this: u8, total: u8, readonly: Option<bool>, set: EventHandler<u
     let hover_class = if readonly.unwrap_or(false) {
         "cursor-not-allowed"
     } else {
-        "hover:bg-neutral-400"
+        "hover:bg-neutral-400 group-hover:bg-neutral-400 cursor-pointer"
     };
 
     rsx! {

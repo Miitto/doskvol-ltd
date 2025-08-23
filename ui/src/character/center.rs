@@ -194,14 +194,14 @@ fn ClassItems(character: Signal<types::Character>, readonly: ReadOnlySignal<bool
                 div { class: "flex flex-row gap-2 items-center",
                     ItemChecked {
                         readonly,
-                        checked: character().items.contains(&item.to_string()),
+                        checked: character().class_items.contains(&item.to_string()),
                         onclick: move |has| {
                             character
                                 .with_mut(|char| {
                                     if has {
-                                        char.items.push(item.to_string());
+                                        char.class_items.push(item.to_string());
                                     } else {
-                                        char.items.retain(|i| i != item);
+                                        char.class_items.retain(|i| i != item);
                                     }
                                 });
                         },
