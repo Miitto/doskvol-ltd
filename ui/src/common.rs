@@ -1,8 +1,15 @@
 use dioxus::prelude::*;
 
 #[component]
-pub fn CountBtn(this: u8, total: u8, readonly: Option<bool>, set: EventHandler<u8>) -> Element {
-    let class = if this < total {
+pub fn CountBtn(
+    this: u8,
+    total: u8,
+    readonly: Option<bool>,
+    set: EventHandler<u8>,
+    class: Option<String>,
+) -> Element {
+    let class = class.unwrap_or_default();
+    let color = if this <= total {
         "bg-neutral-300"
     } else {
         "bg-neutral-500"
@@ -16,13 +23,14 @@ pub fn CountBtn(this: u8, total: u8, readonly: Option<bool>, set: EventHandler<u
 
     rsx! {
         button {
-            class: "h-5 aspect-square {hover_class} {class}",
+            data: "{this}",
+            class: "h-5 aspect-square {hover_class} {color} {class}",
             onclick: move |_| {
                 if readonly.unwrap_or(false) {
                     return;
                 }
-                if this + 1 != total {
-                    set(this + 1);
+                if this != total {
+                    set(this);
                 } else {
                     set(0);
                 }
@@ -39,7 +47,7 @@ pub fn ItemChecked(
 ) -> Element {
     rsx! {
         CountBtn {
-            this: if checked { 0 } else { 1 },
+            this: if checked { 1 } else { 2 },
             total: 1,
             readonly: readonly(),
             set: move |_| {

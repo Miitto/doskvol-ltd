@@ -17,7 +17,7 @@ pub fn Left(readonly: ReadOnlySignal<bool>, mut character: Signal<types::Charact
 
     rsx! {
         div { class: "flex flex-col gap-2 flex-auto p-4 pb-2 lg:pr-2 lg:pb-4",
-            h2 { class: "block text-4xl w-max", "{name}" }
+            h2 { class: "block text-4xl w-max max-w-full", "{name}" }
             if !readonly() {
                 input { class: "p-1", value: "{look}" }
             } else {
@@ -106,7 +106,7 @@ pub fn Left(readonly: ReadOnlySignal<bool>, mut character: Signal<types::Charact
                         }
                     }
                 }
-                div { class: "flex flex-row flex-wrap gap-2 items-center justify-center",
+                div { class: "flex flex-row flex-wrap gap-2 items-center justify-end lg:justify-center",
                     for trauma in types::Trauma::ALL {
                         Trauma { trauma, character, readonly: readonly() }
                     }

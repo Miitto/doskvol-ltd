@@ -18,8 +18,17 @@ pub fn Center(character: Signal<types::Character>, readonly: ReadOnlySignal<bool
     rsx! {
         div { class: "flex flex-col gap-2 flex-auto p-4 pb-2 pt-2 lg:pr-2 lg:pb-4 lg:pt-4 lg:pl-2",
             h1 { class: "text-6xl", "{class}" }
-            for ability in abilities() {
-                Ability { ability: ability.clone() }
+            div { class: "flex flex-col",
+                for ability in abilities() {
+                    Ability { ability: ability.clone() }
+                }
+                if !readonly() {
+                    div { class: "inline-flex justify-end pt-2",
+                        button { class: "bg-primary text-primary-foreground w-fit rounded-lg p-2 cursor-pointer",
+                            "Modify"
+                        }
+                    }
+                }
             }
             hr { class: "my-2" }
             div { class: "flex flex-row flex-wrap gap-4 justify-between",
