@@ -6,6 +6,7 @@ use crate::{common::ItemChecked, elements::Description};
 #[component]
 pub fn Center(character: Signal<types::Character>, readonly: ReadOnlySignal<bool>) -> Element {
     let class = use_signal(|| character().class);
+    let mut open = use_signal(|| false);
 
     let abilities = use_memo(move || {
         let character = character();
@@ -25,8 +26,13 @@ pub fn Center(character: Signal<types::Character>, readonly: ReadOnlySignal<bool
                 if !readonly() {
                     div { class: "inline-flex justify-end pt-2",
                         button { class: "bg-primary text-primary-foreground w-fit rounded-lg p-2 cursor-pointer",
+                        onclick: move |_| open.set(true),
                             "Modify"
                         }
+                    }
+                    AbilityDialog {
+                        open,
+                        character
                     }
                 }
             }
@@ -42,12 +48,94 @@ pub fn Center(character: Signal<types::Character>, readonly: ReadOnlySignal<bool
 #[component]
 fn Ability(ability: types::playbook::Ability) -> Element {
     rsx! {
-        div { class: "flex flex-col gap-1",
+        div { class: "flex flex-col gap-1 w-full",
             span { class: "flex flex-row gap-2 items-center justify-between",
                 h2 { class: "text-2xl w-fit underline", "{ability.name}" }
                 p { class: "italic", "{ability.class}" }
             }
             Description { desc: ability.description }
+        }
+    }
+}
+
+#[component]
+fn AbilityDialog(open: Signal<bool>, character: Signal<types::Character>) -> Element {
+    let abilities = use_memo(move || {
+        let mut a = types::playbook::PLAYBOOK.to_vec();
+        a.sort_by(|a, b| {
+            if a.class != character().class && b.class != character().class {
+                std::cmp::Ordering::Equal
+            } else if a.class == character().class && b.class != character().class {
+                std::cmp::Ordering::Less
+            } else if a.class != character().class && b.class == character().class {
+                std::cmp::Ordering::Greater
+            } else {
+                std::cmp::Ordering::Equal
+            }
+        });
+        a
+    });
+
+    rsx! {
+        dialog { class: "bg-background text-foreground p-4 rounded-lg shadow-lg border border-border z-10 fixed top-4 left-4 right-4 bottom-4 overflow-hidden w-[calc(100%_-_2rem)] h-[calc(100%_-_2rem)]",
+        onclick: move |_| {
+            open.set(false);
+        },
+        open: open(),
+        div { class: "flex flex-col gap-4 w-full h-full",
+                h2 { class: "text-3xl", "Abilities" }
+                hr {}
+                div {
+                    class: "flex flex-col gap-2 max-h-full overflow-y-auto",
+                    for ability in abilities() {
+                        AbilityButton {
+                            ability,
+                            character
+                        }
+                    }
+                }
+                div { class: "inline-flex justify-end",
+                    button {
+                        class: "bg-primary text-primary-foreground w-fit rounded-lg p-2 cursor-pointer",
+                        onclick: move |_| open.set(false),
+                        "Close"
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[component]
+fn AbilityButton(
+    ability: types::playbook::Ability,
+    character: Signal<types::Character>,
+) -> Element {
+    let has_ability = use_memo(move || character().abilities.contains(&ability.name.to_string()));
+    let name = ability.name.to_string();
+
+    let color = if has_ability() {
+        "bg-primary hover:bg-primary/80 text-primary-foreground"
+    } else {
+        "bg-background hover:bg-input text-foreground"
+    };
+
+    rsx! {
+        button {
+            class: "{color} cursor-pointer p-2",
+            onclick: move |e| {
+                e.stop_propagation();
+                let name = name.clone();
+                character
+                    .with_mut(move |char| {
+                        if has_ability() {
+                            char.abilities.retain(|a| *a != name);
+                        } else {
+                            char.abilities.push(name);
+                        }
+                    });
+            },
+            Ability { ability }
         }
     }
 }

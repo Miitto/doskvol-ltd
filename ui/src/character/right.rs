@@ -356,7 +356,7 @@ fn DotLine(readonly: ReadOnlySignal<bool>, params: DotBlockParams) -> Element {
 fn Items(character: Signal<Character>, readonly: ReadOnlySignal<bool>) -> Element {
     let load = use_memo(move || character().load);
     rsx! {
-        div { class: "flex flex-row gap-4 items-center lg:justify-between mb-4",
+        div { class: "flex flex-row gap-2 items-center lg:justify-between mb-4",
             ItemChecked {
                 checked: load().is_some_and(|load| matches!(load, types::Load::Light)),
                 readonly,
@@ -531,21 +531,21 @@ fn Item(
 ) -> Element {
     let has_item = use_memo(move || character().items.contains(flag));
     let connector_background = if has_item() {
-        "bg-neutral-300"
+        "bg-primary"
     } else {
-        "bg-neutral-500"
+        "bg-primary/50"
     };
     let hover = if readonly() {
         "cursor-not-allowed"
     } else {
-        "group-hover:bg-neutral-400"
+        "group-hover:brightness-80"
     };
     rsx! {
         div { class: "flex flex-row gap-2 items-center",
             div { class: "group flex flex-row items-center",
                 for i in 0..boxes {
                     if i != 0 {
-                        div { class: "w-2 h-1 {connector_background} {hover}" }
+                        div { class: "w-1 h-px {connector_background} {hover}" }
                     }
                     ItemChecked {
                         checked: has_item(),
