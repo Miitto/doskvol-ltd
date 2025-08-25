@@ -4,6 +4,9 @@ mod center;
 mod left;
 mod right;
 
+mod create;
+pub use create::CreateCharacter;
+
 use center::Center;
 use left::Left;
 use right::Right;

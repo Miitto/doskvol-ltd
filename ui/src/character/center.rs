@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use types::{Class, Description as DescriptionT};
 
-use crate::{common::ItemChecked, elements::Description};
+use crate::{common::ItemChecked, elements::{Description, Dialog}};
 
 #[component]
 pub fn Center(character: Signal<types::Character>, readonly: ReadOnlySignal<bool>) -> Element {
@@ -77,12 +77,10 @@ fn AbilityDialog(open: Signal<bool>, character: Signal<types::Character>) -> Ele
     });
 
     rsx! {
-        dialog { class: "bg-background text-foreground p-4 rounded-lg shadow-lg border border-border z-10 fixed top-4 left-4 right-4 bottom-4 overflow-hidden w-[calc(100%_-_2rem)] h-[calc(100%_-_2rem)]",
-        onclick: move |_| {
-            open.set(false);
-        },
-        open: open(),
-        div { class: "flex flex-col gap-4 w-full h-full",
+        Dialog {
+            open,
+            close_on_click: true,
+            div { class: "flex flex-col gap-4 w-full h-full",
                 h2 { class: "text-3xl", "Abilities" }
                 hr {}
                 div {

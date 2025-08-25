@@ -1,8 +1,8 @@
 use super::DB;
-use rusqlite::{Connection, Result};
+use rusqlite::Result;
 
 pub fn query_crew_characters(crew_id: usize) -> Result<Vec<types::CharacterPreview>> {
-    DB.with(|conn| {
+    DB.with_borrow(|conn| {
         let mut stmt = conn.prepare(
             "SELECT id, name, class, player_id, crew_id FROM characters WHERE crew_id = ?1",
         )?;
@@ -25,7 +25,7 @@ pub fn query_crew_characters(crew_id: usize) -> Result<Vec<types::CharacterPrevi
 }
 
 pub fn get_crew(id: usize) -> Result<Option<types::Crew>> {
-    DB.with(|conn| {
+    DB.with_borrow(|conn| {
         let mut stmt = conn.prepare(
             "SELECT id, name
         FROM crews WHERE id = ?1 LIMIT 1",
@@ -49,7 +49,7 @@ pub fn get_crew(id: usize) -> Result<Option<types::Crew>> {
 }
 
 pub fn query_crews() -> Result<Vec<types::CrewPreview>> {
-    DB.with(|conn| {
+    DB.with_borrow(|conn| {
         let mut stmt = conn.prepare("SELECT id, name FROM crews")?;
 
         let crew_iter = stmt.query_map([], |row| {
@@ -62,5 +62,19 @@ pub fn query_crews() -> Result<Vec<types::CrewPreview>> {
         let crews: Vec<types::CrewPreview> = crew_iter.filter_map(Result::ok).collect();
 
         Ok(crews)
+    })
+}
+
+pub fn create_crew(crew: crate::CrewCreate) -> Result<types::Crew> {
+    DB.with_borrow_mut(|conn| {
+        let tx = conn.transaction()?;
+
+        tx.execute("INSERT INTO crews (name) VALUES (?1)", [crew.name.clone()])?;
+
+        let id = tx.last_insert_rowid() as usize;
+
+        tx.commit()?;
+
+        Ok(types::Crew { id, name: crew.name })
     })
 }

@@ -1,7 +1,8 @@
 use super::DB;
 use rusqlite::Result;
+use types::Description;
 pub fn query_character(id: usize) -> Result<Option<types::Character>> {
-    DB.with(|conn| {
+    DB.with_borrow(|conn| {
         let mut stmt = conn.prepare(
             "SELECT
         id, name, class, look, abilities, heritage,
@@ -59,5 +60,47 @@ pub fn query_character(id: usize) -> Result<Option<types::Character>> {
         } else {
             Ok(None)
         }
+    })
+}
+
+pub fn create_character(character: crate::CharacterCreate) -> Result<types::Character> {
+    DB.with_borrow_mut(|conn| {
+        let tx = conn.transaction()?;
+
+        tx.execute(
+            "INSERT INTO characters (name) VALUES (?1)",
+            [character.name.clone()],
+        )?;
+
+        let id = tx.last_insert_rowid() as usize;
+
+        tx.commit()?;
+
+        Ok(types::Character {
+            id,
+            name: character.name,
+            player_id: todo!(),
+            crew_id: todo!(),
+            look: Description::new("".to_string()),
+            heritage: todo!(),
+            background: todo!(),
+            vice: todo!(),
+            stress: todo!(),
+            trauma: todo!(),
+            harm: todo!(),
+            healing: todo!(),
+            armor: todo!(),
+            notes: todo!(),
+            class: todo!(),
+            abilities: todo!(),
+            contacts: todo!(),
+            class_items: todo!(),
+            stash: todo!(),
+            coin: todo!(),
+            xp: todo!(),
+            dots: todo!(),
+            load: todo!(),
+            items: todo!(),
+        })
     })
 }

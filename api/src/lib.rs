@@ -37,3 +37,30 @@ pub async fn get_all_crews() -> Result<Vec<types::CrewPreview>, ServerFnError> {
 
     Ok(crews)
 }
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct CrewCreate {
+    pub name: String
+}
+
+#[server(CreateCrew)]
+pub async fn create_crew(crew: CrewCreate) -> Result<types::Crew, ServerFnError> {
+    let crew = db::create_crew(crew)?;
+
+    Ok(crew)
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct CharacterCreate {
+    pub name: String,
+    pub class: types::Class
+}
+
+#[server(CreateCharacter)]
+pub async fn create_character(
+    character: CharacterCreate
+    ) -> Result<types::Character, ServerFnError> {
+    let character = db::create_character(character)?;
+
+    Ok(character)
+}

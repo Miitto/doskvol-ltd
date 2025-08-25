@@ -1,3 +1,6 @@
+#[cfg(feature = "server")]
+use std::cell::RefCell;
+
 use rusqlite::Connection;
 
 mod character;
@@ -7,7 +10,7 @@ pub use crew::*;
 
 #[cfg(feature = "server")]
 thread_local! {
-    pub static DB: Connection = {
+    pub static DB: RefCell<Connection> = {
         let conn = Connection::open("blades.db").expect("Failed to open database");
 
         conn.execute_batch(
@@ -66,6 +69,6 @@ thread_local! {
             );",
         ).expect("Failed to create characters table");
 
-        conn
+        RefCell::new(conn)
     }
 }

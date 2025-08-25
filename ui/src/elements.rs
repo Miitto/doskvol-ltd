@@ -69,3 +69,19 @@ pub fn DescriptionEdit(
         }
     }
 }
+
+#[component]
+pub fn Dialog(open: Signal<bool>, children: Element, close_on_click: Option<bool>) -> Element {
+    let close_on_click = close_on_click.unwrap_or(false);
+    rsx! {
+        dialog { class: "bg-background text-foreground p-4 rounded-lg shadow-lg border border-border z-10 fixed top-4 left-4 right-4 bottom-4 overflow-hidden w-[calc(100%_-_2rem)] h-[calc(100%_-_2rem)]",
+            onclick: move |_| {
+                if close_on_click {
+                    open.set(false);
+                }
+            },
+            open: open(),
+            {children}
+        }
+    }
+}
