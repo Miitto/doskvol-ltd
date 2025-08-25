@@ -8,3 +8,8 @@ dioxus = { workspace = true, features = ["fullstack"] }
 tracing.workspace = true
 
 types.workspace = true
+
+rusqlite = { version = "0.37.0", features = ["bundled"], optional = true }
+
+[features]
+server = ["dep:rusqlite", "types/server"]

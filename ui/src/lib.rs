@@ -7,6 +7,9 @@ pub mod elements;
 mod character;
 pub use character::Character;
 
+mod crew;
+pub use crew::Crew;
+
 const TAILWIND_CSS: Asset = asset!("/assets/tailwind.css");
 
 #[component]

@@ -140,3 +140,20 @@ impl<T: std::fmt::Display> PartialEq<Description<T>> for String {
         s == *self
     }
 }
+
+#[cfg(feature = "server")]
+mod server {
+    use rusqlite::types::{FromSql, FromSqlResult, ToSql, ToSqlOutput, ValueRef};
+
+    impl FromSql for super::Description<String> {
+        fn column_result(value: ValueRef<'_>) -> FromSqlResult<Self> {
+            String::column_result(value).map(super::Description::new)
+        }
+    }
+
+    impl<T: std::fmt::Display> ToSql for super::Description<T> {
+        fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
+            Ok(self.0.to_string().into())
+        }
+    }
+}

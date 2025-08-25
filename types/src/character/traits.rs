@@ -218,3 +218,149 @@ impl std::fmt::Display for Trauma {
         }
     }
 }
+
+#[cfg(feature = "server")]
+mod server {
+    use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSql, ToSqlOutput, ValueRef};
+
+    impl FromSql for super::Heritage {
+        fn column_result(value: ValueRef<'_>) -> FromSqlResult<Self> {
+            String::column_result(value).and_then(|s| {
+                Ok(match s.as_str() {
+                    "Akoros" => super::Heritage::Akoros,
+                    "The Dagger Isles" => super::Heritage::TheDaggerIsles,
+                    "Iruvia" => super::Heritage::Iruvia,
+                    "Severos" => super::Heritage::Severos,
+                    "Skovlan" => super::Heritage::Skovlan,
+                    "Tycheros" => super::Heritage::Tycsheros,
+                    _ => return Err(FromSqlError::InvalidType),
+                })
+            })
+        }
+    }
+
+    impl ToSql for super::Heritage {
+        fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
+            let s = match self {
+                super::Heritage::Akoros => "Akoros",
+                super::Heritage::TheDaggerIsles => "The Dagger Isles",
+                super::Heritage::Iruvia => "Iruvia",
+                super::Heritage::Severos => "Severos",
+                super::Heritage::Skovlan => "Skovlan",
+                super::Heritage::Tycsheros => "Tycheros",
+            };
+            Ok(s.into())
+        }
+    }
+
+    impl FromSql for super::Background {
+        fn column_result(value: ValueRef<'_>) -> FromSqlResult<Self> {
+            String::column_result(value).and_then(|s| {
+                Ok(match s.as_str() {
+                    "Academic" => super::Background::Academic,
+                    "Labor" => super::Background::Labor,
+                    "Law" => super::Background::Law,
+                    "Trade" => super::Background::Trade,
+                    "Military" => super::Background::Military,
+                    "Noble" => super::Background::Noble,
+                    "Underworld" => super::Background::Underworld,
+                    _ => return Err(FromSqlError::InvalidType),
+                })
+            })
+        }
+    }
+
+    impl ToSql for super::Background {
+        fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
+            let s = match self {
+                super::Background::Academic => "Academic",
+                super::Background::Labor => "Labor",
+                super::Background::Law => "Law",
+                super::Background::Trade => "Trade",
+                super::Background::Military => "Military",
+                super::Background::Noble => "Noble",
+                super::Background::Underworld => "Underworld",
+            };
+            Ok(s.into())
+        }
+    }
+
+    impl FromSql for super::Vice {
+        fn column_result(value: ValueRef<'_>) -> FromSqlResult<Self> {
+            String::column_result(value).and_then(|s| {
+                Ok(match s.as_str() {
+                    "Faith" => super::Vice::Faith,
+                    "Gambling" => super::Vice::Gambling,
+                    "Luxury" => super::Vice::Luxury,
+                    "Obligation" => super::Vice::Obligation,
+                    "Pleasure" => super::Vice::Pleasure,
+                    "Stupor" => super::Vice::Stupor,
+                    "Weird" => super::Vice::Weird,
+                    _ => return Err(FromSqlError::InvalidType),
+                })
+            })
+        }
+    }
+
+    impl ToSql for super::Vice {
+        fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
+            let s = match self {
+                super::Vice::Faith => "Faith",
+                super::Vice::Gambling => "Gambling",
+                super::Vice::Luxury => "Luxury",
+                super::Vice::Obligation => "Obligation",
+                super::Vice::Pleasure => "Pleasure",
+                super::Vice::Stupor => "Stupor",
+                super::Vice::Weird => "Weird",
+            };
+            Ok(s.into())
+        }
+    }
+
+    impl FromSql for super::Trauma {
+        fn column_result(value: ValueRef<'_>) -> FromSqlResult<Self> {
+            String::column_result(value).and_then(|s| {
+                Ok(match s.as_str() {
+                    "Cold" => super::Trauma::Cold,
+                    "Haunted" => super::Trauma::Haunted,
+                    "Obsessed" => super::Trauma::Obsessed,
+                    "Paranoid" => super::Trauma::Paranoid,
+                    "Relentless" => super::Trauma::Relentless,
+                    "Soft" => super::Trauma::Soft,
+                    "Unstable" => super::Trauma::Unstable,
+                    "Vicious" => super::Trauma::Vicious,
+                    _ => return Err(FromSqlError::InvalidType),
+                })
+            })
+        }
+    }
+
+    impl ToSql for super::Trauma {
+        fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
+            let s = match self {
+                super::Trauma::Cold => "Cold",
+                super::Trauma::Haunted => "Haunted",
+                super::Trauma::Obsessed => "Obsessed",
+                super::Trauma::Paranoid => "Paranoid",
+                super::Trauma::Relentless => "Relentless",
+                super::Trauma::Soft => "Soft",
+                super::Trauma::Unstable => "Unstable",
+                super::Trauma::Vicious => "Vicious",
+            };
+            Ok(s.into())
+        }
+    }
+
+    impl FromSql for super::TraumaFlags {
+        fn column_result(value: ValueRef<'_>) -> FromSqlResult<Self> {
+            u8::column_result(value)
+                .and_then(|bits| Self::from_bits(bits).ok_or(FromSqlError::InvalidType))
+        }
+    }
+
+    impl ToSql for super::TraumaFlags {
+        fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
+            Ok(self.bits().into())
+        }
+    }
+}

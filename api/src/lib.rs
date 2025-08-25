@@ -1,58 +1,39 @@
 //! This crate contains all shared fullstack server functions.
 use dioxus::prelude::*;
 
-/// Echo the user input on the server.
+#[cfg(feature = "server")]
+mod db;
+
 #[server(GetCharacter)]
 pub async fn get_character(id: usize) -> Result<types::Character, ServerFnError> {
-    let character = types::Character {
-        id: 0,
-        name: "Lord Theodophilus Dalmore".to_string(),
-        class: types::Class::Slide,
-        look: "Affable, handsome, long scarf, waistcoat".into(),
-        abilities: vec![
-            "Cloak & Dagger".into(),
-            "Like looking into a mirror".into(),
-            "A little something on the side".into(),
-        ],
-        heritage: types::Heritage::Akoros,
-        background: types::Background::Noble,
-        vice: types::Vice::Luxury,
-        coin: 1,
-        stash: 10,
-        xp: types::XP {
-            playbook: 0,
-            insight: 0,
-            prowess: 0,
-            resolve: 0,
-        },
-        dots: types::Dots {
-            hunt: 0,
-            study: 0,
-            survey: 0,
-            tinker: 0,
-            finesse: 3,
-            prowl: 3,
-            skirmish: 1,
-            wreck: 0,
-            attune: 1,
-            command: 0,
-            consort: 1,
-            sway: 2,
-        },
-        stress: 3,
-        trauma: types::TraumaFlags::empty(),
-        harm: types::Harm::default(),
-        healing: 1,
-        armor: types::ArmorFlags::ARMOR,
-        notes: types::Description::new("Nyryx scares me\nhelp".into()),
-        contacts: types::Contacts {
-            friends: vec!["Nyryx, a prostitute".to_string()],
-            rivals: vec!["Bazso Baz, a gang leader".to_string()],
-        },
-        class_items: vec![],
-        load: None,
-        items: types::Items::empty(),
-    };
+    let character = db::query_character(id)?.ok_or_else(|| {
+        ServerFnError::<server_fn::error::NoCustomError>::Request("Character not found".to_string())
+    })?;
 
     Ok(character)
+}
+
+#[server(GetCrewCharacters)]
+pub async fn get_crew_characters(
+    crew_id: usize,
+) -> Result<Vec<types::CharacterPreview>, ServerFnError> {
+    let characters = db::query_crew_characters(crew_id)?;
+
+    Ok(characters)
+}
+
+#[server(GetCrew)]
+pub async fn get_crew(id: usize) -> Result<types::Crew, ServerFnError> {
+    let crew = db::get_crew(id)?.ok_or_else(|| {
+        ServerFnError::<server_fn::error::NoCustomError>::Request("Crew not found".to_string())
+    })?;
+
+    Ok(crew)
+}
+
+#[server(GetAllCrews)]
+pub async fn get_all_crews() -> Result<Vec<types::CrewPreview>, ServerFnError> {
+    let crews = db::query_crews()?;
+
+    Ok(crews)
 }

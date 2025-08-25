@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 
-use views::Home;
+use views::{Character, Crew, Home};
 
 mod views;
 
@@ -10,6 +10,10 @@ enum Route {
     #[layout(DesktopNavbar)]
     #[route("/")]
     Home {},
+    #[route("/crew/:id")]
+    Crew { id: usize },
+    #[route("/character/:id")]
+    Character { id: usize },
 }
 
 fn main() {
