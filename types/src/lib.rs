@@ -11,22 +11,30 @@ pub use crew::*;
 
 data::blades!();
 
+impl TryFrom<&str> for Class {
+    type Error = String;
+    fn try_from(s: &str) -> Result<Self, String> {
+        Ok(match s.to_lowercase().as_str() {
+            "cutter" => Class::Cutter,
+            "hound" => Class::Hound,
+            "leech" => Class::Leech,
+            "lurk" => Class::Lurk,
+            "slide" => Class::Slide,
+            "spider" => Class::Spider,
+            "whisper" => Class::Whisper,
+            _ => return Err(format!("Invalid class: {}", s)),
+        })
+    }
+}
+
 #[cfg(feature = "server")]
 mod server {
     use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSql, ToSqlOutput, ValueRef};
 
     impl FromSql for super::Class {
         fn column_result(value: ValueRef<'_>) -> FromSqlResult<Self> {
-            String::column_result(value).and_then(|s| match s.as_str() {
-                "Cutter" => Ok(super::Class::Cutter),
-                "Hound" => Ok(super::Class::Hound),
-                "Leech" => Ok(super::Class::Leech),
-                "Lurk" => Ok(super::Class::Lurk),
-                "Slide" => Ok(super::Class::Slide),
-                "Spider" => Ok(super::Class::Spider),
-                "Whisper" => Ok(super::Class::Whisper),
-                _ => Err(FromSqlError::InvalidType),
-            })
+            String::column_result(value)
+                .and_then(|s| s.as_str().try_into().map_err(|_| FromSqlError::InvalidType))
         }
     }
 

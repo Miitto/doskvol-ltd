@@ -40,7 +40,7 @@ pub async fn get_all_crews() -> Result<Vec<types::CrewPreview>, ServerFnError> {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct CrewCreate {
-    pub name: String
+    pub name: String,
 }
 
 #[server(CreateCrew)]
@@ -52,14 +52,15 @@ pub async fn create_crew(crew: CrewCreate) -> Result<types::Crew, ServerFnError>
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct CharacterCreate {
+    pub crew_id: usize,
     pub name: String,
-    pub class: types::Class
+    pub class: types::Class,
 }
 
 #[server(CreateCharacter)]
 pub async fn create_character(
-    character: CharacterCreate
-    ) -> Result<types::Character, ServerFnError> {
+    character: CharacterCreate,
+) -> Result<types::Character, ServerFnError> {
     let character = db::create_character(character)?;
 
     Ok(character)
