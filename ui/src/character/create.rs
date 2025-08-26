@@ -22,6 +22,7 @@ pub fn CreateCharacter(
                     }
                     let char = api::CharacterCreate {
                         crew_id,
+                        player_id: 0,
                         name: name(),
                         class: class()
                     };
@@ -37,7 +38,6 @@ pub fn CreateCharacter(
                     }
                 }
                 select {
-                    class: "bg-input border border-border text-input-foreground",
                     onchange: move |e| {
                         if let Ok(c) =  std::convert::TryInto::<types::Class>::try_into(e.value().as_str()) {
                             class.set(c);

@@ -53,6 +53,7 @@ pub async fn create_crew(crew: CrewCreate) -> Result<types::Crew, ServerFnError>
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct CharacterCreate {
     pub crew_id: usize,
+    pub player_id: usize,
     pub name: String,
     pub class: types::Class,
 }

@@ -68,8 +68,13 @@ pub fn create_character(character: crate::CharacterCreate) -> Result<types::Char
         let tx = conn.transaction()?;
 
         tx.execute(
-            "INSERT INTO characters (name) VALUES (?1)",
-            [character.name.clone()],
+            "INSERT INTO characters (crew_id, player_id, name, class) VALUES (?1, ?2, ?3, ?4)",
+            [
+                character.crew_id.to_string(),
+                character.player_id.to_string(),
+                character.name.clone(),
+                character.class.to_string(),
+            ],
         )?;
 
         let id = tx.last_insert_rowid() as usize;
@@ -79,7 +84,7 @@ pub fn create_character(character: crate::CharacterCreate) -> Result<types::Char
         Ok(types::Character {
             id,
             name: character.name,
-            player_id: 0,
+            player_id: character.player_id,
             crew_id: character.crew_id,
             look: Description::new("".to_string()),
             heritage: types::Heritage::Akoros,
