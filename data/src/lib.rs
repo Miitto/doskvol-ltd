@@ -19,6 +19,8 @@ pub fn blades(_: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
     quote::quote! {
         #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+        #[cfg_attr(feature = "server", derive(diesel::FromSqlRow, diesel::AsExpression))]
+        #[cfg_attr(feature = "server", diesel(sql_type = diesel::sql_types::Text))]
         pub enum Class {
             Cutter,
             Hound,

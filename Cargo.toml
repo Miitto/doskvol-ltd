@@ -6,6 +6,7 @@ members = ["ui", "web", "desktop", "mobile", "api", "data", "types"]
 dioxus = { version = "0.6.0" }
 serde = { version = "1.0", features = ["derive"] }
 tracing = "0.1.41"
+diesel = { version = "2.2.0", features = ["sqlite"] }
 
 # workspace
 ui = { path = "ui" }

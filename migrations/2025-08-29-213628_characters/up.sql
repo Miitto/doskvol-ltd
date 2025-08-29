@@ -1,0 +1,87 @@
+CREATE TABLE characters (
+  id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+  user_id INTEGER NOT NULL,
+  crew_id INTEGER NOT NULL,
+  name TEXT NOT NULL,
+  look TEXT NOT NULL DEFAULT '',
+  heritage TEXT NOT NULL,
+  background TEXT NOT NULL,
+  vice TEXT NOT NULL,
+  stress INTEGER NOT NULL DEFAULT 0,
+  trauma INTEGER NOT NULL DEFAULT 0,
+  healing INTEGER NOT NULL DEFAULT 0,
+  armor INTEGER NOT NULL DEFAULT 0,
+  notes TEXT NOT NULL DEFAULT '',
+  class TEXT CHECK(class IN ('Cutter', 'Hound', 'Leech', 'Lurk', 'Slide', 'Spider', 'Whisper')) NOT NULL,
+  stash INTEGER NOT NULL DEFAULT 0,
+  coin INTEGER NOT NULL DEFAULT 0,
+
+  load TEXT CHECK(load < 3 AND load >= 0),
+
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (crew_id) REFERENCES crews(id) ON DELETE CASCADE
+);
+
+CREATE TABLE character_harm (
+  character_id INTEGER PRIMARY KEY NOT NULL,
+  harm_1_1 TEXT NOT NULL DEFAULT '',
+  harm_1_2 TEXT NOT NULL DEFAULT '',
+  harm_2_1 TEXT NOT NULL DEFAULT '',
+  harm_2_2 TEXT NOT NULL DEFAULT '',
+  harm_3 TEXT NOT NULL DEFAULT '',
+  FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE CASCADE
+);
+
+CREATE TABLE character_abilities (
+  id INTEGER PRIMARY KEY NOT NULL,
+  character_id INTEGER NOT NULL,
+  name TEXT NOT NULL,
+  FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE CASCADE
+);
+
+CREATE TABLE character_contacts (
+  id INTEGER PRIMARY KEY NOT NULL,
+  character_id INTEGER NOT NULL,
+  name TEXT NOT NULL,
+  friend BOOLEAN NOT NULL,
+  FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE CASCADE
+);
+
+CREATE TABLE character_class_items (
+  id INTEGER PRIMARY KEY NOT NULL,
+  character_id INTEGER NOT NULL,
+  name TEXT NOT NULL,
+  FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE CASCADE
+);
+
+CREATE TABLE character_items (
+  id INTEGER PRIMARY KEY NOT NULL,
+  character_id INTEGER NOT NULL,
+  name TEXT NOT NULL,
+  FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE CASCADE
+);
+
+CREATE TABLE character_xp (
+  character_id INTEGER PRIMARY KEY NOT NULL,
+  playbook INTEGER NOT NULL DEFAULT 0,
+  insight INTEGER NOT NULL DEFAULT 0,
+  prowess INTEGER NOT NULL DEFAULT 0,
+  resolve INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE character_dots (
+  character_id INTEGER PRIMARY KEY NOT NULL,
+  
+  hunt INTEGER NOT NULL DEFAULT 0,
+  study INTEGER NOT NULL DEFAULT 0,
+  survey INTEGER NOT NULL DEFAULT 0,
+  tinker INTEGER NOT NULL DEFAULT 0,
+  finesse INTEGER NOT NULL DEFAULT 0,
+  prowl INTEGER NOT NULL DEFAULT 0,
+  skirmish INTEGER NOT NULL DEFAULT 0,
+  wreck INTEGER NOT NULL DEFAULT 0,
+  arcane INTEGER NOT NULL DEFAULT 0,
+  command INTEGER NOT NULL DEFAULT 0,
+  consort INTEGER NOT NULL DEFAULT 0,
+  sway INTEGER NOT NULL DEFAULT 0
+);
