@@ -4,7 +4,7 @@ mod register;
 pub use register::*;
 
 #[component]
-pub fn Login(register: NavigationTarget) -> Element {
+pub fn Login(register: NavigationTarget, on_login: EventHandler) -> Element {
     let mut username = use_signal(String::default);
     let mut totp = use_signal(String::default);
 

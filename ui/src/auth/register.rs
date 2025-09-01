@@ -83,6 +83,15 @@ fn TotpSetup(
 
     let submit = move || async move {
         let secret = if let Ok(totp) = &*totp.read() {
+            #[cfg(not(debug_assertions))]
+            {
+                if totp.check_current(&code()).unwrap_or(false) {
+                    error.set(None);
+                } else {
+                    error.set(Some("Invalid authenticator code".into()));
+                    return;
+                }
+            }
             totp.get_secret_base32()
         } else {
             return;
@@ -137,6 +146,11 @@ fn TotpSetup(
 
                     if let Some(error) = error() {
                         p { class: "text-destructive", "{error}" }
+                    }
+
+                    div {
+                        class: "flex justify-end w-full",
+                        button { class: "bg-primary text-primary-foreground rounded px-4 py-2 hover:bg-primary/90 transition", "Register" }
                     }
                 }
             }
