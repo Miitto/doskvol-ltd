@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 
 #[component]
-pub fn Character(id: usize) -> Element {
+pub fn Character(id: types::CharacterId) -> Element {
     let character =
         use_server_future(move || async move { api::get_character(id).await.unwrap() })?;
 

@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 
 #[component]
-pub fn Crew(id: usize) -> Element {
+pub fn Crew(id: types::CrewId) -> Element {
     let crew = use_server_future(move || async move { api::get_crew(id).await.unwrap() })?;
 
     rsx! {

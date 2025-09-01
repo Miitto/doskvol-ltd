@@ -10,18 +10,18 @@ use crate::{Class, Description};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub struct CharacterPreview {
-    pub id: usize,
-    pub player_id: usize,
-    pub crew_id: usize,
+    pub id: crate::CharacterId,
+    pub player_id: crate::UserId,
+    pub crew_id: crate::CrewId,
     pub name: String,
     pub class: Class,
 }
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct Character {
-    pub id: i64,
-    pub player_id: i64,
-    pub crew_id: i64,
+    pub id: crate::CharacterId,
+    pub user_id: crate::UserId,
+    pub crew_id: crate::CrewId,
     pub name: String,
     pub look: Description<String>,
     pub heritage: Heritage,
@@ -79,6 +79,3 @@ bitflags::bitflags! {
         const LANTERN = 0b1000_0000_0000_0000;
     }
 }
-
-#[cfg(feature = "server")]
-mod server {}

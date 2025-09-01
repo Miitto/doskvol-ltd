@@ -7,6 +7,12 @@ dioxus = { version = "0.6.0" }
 serde = { version = "1.0", features = ["derive"] }
 tracing = "0.1.41"
 diesel = { version = "2.2.0", features = ["sqlite"] }
+libsqlite3-sys = { version = ">=0.8.0, <0.13.0", features = ["bundled"] }
+totp-rs = { version = "5.7.0", features = [
+  "qr",
+  "serde_support",
+  "gen_secret",
+] }
 
 # workspace
 ui = { path = "ui" }

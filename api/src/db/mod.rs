@@ -1,7 +1,7 @@
 use diesel::prelude::*;
 
 pub mod models;
-pub mod schema;
+pub(crate) mod schema;
 
 pub fn connect() -> diesel::SqliteConnection {
     if let Err(e) = dotenvy::dotenv() {

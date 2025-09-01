@@ -1,5 +1,4 @@
 CREATE TABLE users (
-  id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-  username TEXT NOT NULL UNIQUE,
-  password_hash TEXT NOT NULL
+  username TEXT NOT NULL PRIMARY KEY,
+  totp_secret TEXT NOT NULL
 );

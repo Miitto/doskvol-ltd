@@ -4,12 +4,20 @@ use crate::elements::Dialog;
 
 #[component]
 pub fn CreateCharacter(
-    crew_id: usize,
-    on_create: EventHandler<api::CharacterCreate>,
+    crew_id: types::CrewId,
+    on_create: EventHandler<api::NewCharacter>,
     open: Signal<bool>,
 ) -> Element {
     let mut name = use_signal(String::new);
     let mut class = use_signal(|| types::Class::Cutter);
+
+    let currentUser = use_context::<Signal<crate::Auth>>();
+    let currentUser = use_memo(move || match currentUser() {
+        crate::Auth::Authenticated { username } => username.clone(),
+        crate::Auth::Anon => {
+            panic!("CreateCharacter rendered while not authenticated");
+        }
+    });
 
     rsx! {
         Dialog {
@@ -20,9 +28,9 @@ pub fn CreateCharacter(
                     if name().is_empty() {
                         return;
                     }
-                    let char = api::CharacterCreate {
+                    let char = api::NewCharacter {
                         crew_id,
-                        player_id: 0,
+                        user_id: currentUser(),
                         name: name(),
                         class: class()
                     };

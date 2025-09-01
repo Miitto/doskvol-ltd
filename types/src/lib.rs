@@ -11,6 +11,15 @@ pub use crew::*;
 
 data::blades!();
 
+pub type CharacterId = i32;
+pub type CrewId = i32;
+pub type UserId = String;
+
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct User {
+    pub username: String,
+}
+
 impl TryFrom<&str> for Class {
     type Error = String;
     fn try_from(s: &str) -> Result<Self, String> {

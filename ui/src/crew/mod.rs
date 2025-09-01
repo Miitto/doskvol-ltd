@@ -8,7 +8,7 @@ use crate::character::CreateCharacter;
 #[component]
 pub fn Crew<R: 'static + Clone + PartialEq + Routable>(
     crew: types::Crew,
-    to_character_page: Callback<usize, R>,
+    to_character_page: Callback<types::CrewId, R>,
 ) -> Element {
     let id = crew.id;
     let mut crew_characters =
