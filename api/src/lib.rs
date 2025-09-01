@@ -10,6 +10,7 @@ use db::schema::*;
 mod db;
 
 pub mod auth;
+pub use auth::{login, register};
 
 pub use db::models::*;
 
@@ -18,66 +19,6 @@ fn launch_server() {
     tokio::runtime::Runtime::new()
         .expect("Failed to create Tokio runtime")
         .block_on(async {});
-}
-
-#[server(Login)]
-pub async fn login(username: String, code: String) -> Result<types::User, ServerFnError> {
-    let mut conn = db::connect();
-
-    let user: db::models::User = users::table
-        .filter(db::schema::users::username.eq(username))
-        .select(db::models::User::as_select())
-        .first(&mut conn)
-        .map_err(|e| {
-            dioxus::logger::tracing::info!("Failed to find user: {e}");
-            ServerFnError::<NoCustomError>::Request("User not found".to_string())
-        })?;
-
-    let secret = totp_rs::Secret::Encoded(user.totp_secret);
-    let secret = secret.to_raw()?;
-
-    let totp = totp_rs::TOTP::new(
-        totp_rs::Algorithm::SHA1,
-        6,
-        1,
-        30,
-        secret.to_bytes()?,
-        Some("Doskvol-Ltd".to_string()),
-        user.username.clone(),
-    )?;
-
-    if totp.check_current(&code)? {
-        Ok(types::User {
-            username: user.username,
-        })
-    } else {
-        Err(ServerFnError::<NoCustomError>::Request(
-            "Invalid code".to_string(),
-        ))
-    }
-}
-
-#[server(Register)]
-pub async fn register(username: String, totp_secret: String) -> Result<types::User, ServerFnError> {
-    let mut conn = db::connect();
-
-    let new_user = db::models::NewUser {
-        username: username.clone(),
-        totp_secret,
-    };
-
-    let user: db::models::User = diesel::insert_into(users::table)
-        .values(&new_user)
-        .returning(db::models::User::as_returning())
-        .get_result(&mut conn)
-        .map_err(|e| {
-            dioxus::logger::tracing::info!("Failed to create user: {e}");
-            ServerFnError::<NoCustomError>::Request("Failed to create user".to_string())
-        })?;
-
-    Ok(types::User {
-        username: user.username,
-    })
 }
 
 #[server(GetCharacter)]

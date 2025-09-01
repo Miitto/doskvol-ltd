@@ -22,7 +22,13 @@ pub fn Login(register: NavigationTarget, on_login: EventHandler) -> Element {
 
                 if let Ok(user) = user {
                     auth.set(crate::Auth::Authenticated{username: user.username});
+                    on_login.call(());
                 } else {
+                    #[cfg(debug_assertions)]
+                    {
+                        let err = user.unwrap_err();
+                        tracing::error!("Login error: {:?}", err);
+                    }
                     error.set(Some("Invalid username or authenticator code".into()))
                 }
             },

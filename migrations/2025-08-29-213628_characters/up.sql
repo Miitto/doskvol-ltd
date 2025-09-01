@@ -18,7 +18,7 @@ CREATE TABLE characters (
   load INTEGER CHECK(load < 3 AND load >= 0),
   items INTEGER NOT NULL DEFAULT 0,
 
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(username) ON DELETE CASCADE,
   FOREIGN KEY (crew_id) REFERENCES crews(id) ON DELETE CASCADE
 );
 

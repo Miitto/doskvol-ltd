@@ -118,7 +118,10 @@ diesel::joinable!(character_dots -> characters (character_id));
 diesel::joinable!(character_harm -> characters (character_id));
 diesel::joinable!(character_xp -> characters (character_id));
 diesel::joinable!(characters -> crews (crew_id));
+diesel::joinable!(characters -> users (user_id));
 diesel::joinable!(crew_members -> crews (crew_id));
+diesel::joinable!(crew_members -> users (user_id));
+diesel::joinable!(crews -> users (dm_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
     character_abilities,

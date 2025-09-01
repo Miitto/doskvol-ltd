@@ -51,20 +51,26 @@ pub fn generate_totp_secret(name: String) -> Result<TOTP, TotpError> {
 pub async fn login(username: String, code: String) -> Result<types::User, ServerFnError> {
     let mut conn = db::connect();
 
+    tracing::info!("Login attempt for user: {}", username);
+
     let user: db::models::User = db::schema::users::table
         .filter(db::schema::users::username.eq(username))
         .select(db::models::User::as_select())
         .first(&mut conn)
         .map_err(|e| {
-            dioxus::logger::tracing::info!("Failed to find user: {e}");
+            tracing::info!("Failed to find user: {e}");
             ServerFnError::<NoCustomError>::Request("User not found".to_string())
         })?;
 
+    // FIXME: Remove this backdoor in production
     #[cfg(debug_assertions)]
-    if code == "0000" {
-        return Ok(types::User {
-            username: user.username,
-        });
+    {
+        tracing::info!("Debug login: code is {code}");
+        if code == "0000" {
+            return Ok(types::User {
+                username: user.username,
+            });
+        }
     }
 
     let secret = totp_rs::Secret::Encoded(user.totp_secret);

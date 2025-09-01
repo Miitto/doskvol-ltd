@@ -8,17 +8,20 @@ mod views;
 #[rustfmt::skip]
 enum Route {
     #[layout(DesktopNavbar)]
-    #[route("/login")]
-    Login {},
-    #[route("/register")]
-    Register {},
-    #[layout(AuthRequired)]
-    #[route("/")]
-    Home {},
-    #[route("/crew/:id")]
-    Crew { id: types::CrewId },
-    #[route("/character/:id")]
-    Character { id: types::CrewId },
+        #[route("/login")]
+        Login {},
+        #[route("/register")]
+        Register {},
+        #[layout(AuthRequired)]
+            #[route("/")]
+            Home {},
+            #[route("/crew/:id")]
+            Crew { id: types::CrewId },
+            #[route("/character/:id")]
+            Character { id: types::CrewId },
+        #[end_layout]
+        #[route("/:..route")]
+        PageNotFound { route: Vec<String> },
 }
 
 fn main() {
@@ -29,7 +32,15 @@ fn main() {
 fn App() -> Element {
     rsx! {
         ui::AuthProvider {
-            Router::<Route> {}
+            Router::<Route> {
+                config: || {
+                    RouterConfig::default()
+                        .on_update(|state| {
+                            dioxus::logger::tracing::trace!("Navigation to: {:?}", state.current());
+                            None
+                        })
+                }
+            }
         }
     }
 }
@@ -43,6 +54,15 @@ fn DesktopNavbar() -> Element {
         Outlet::<Route> {}
     }
 }
+
+#[component]
+fn PageNotFound(route: Vec<String>) -> Element {
+    rsx! {
+        h1 { "404 - Page not found" }
+        Link { to: Route::Home {}, "Go home" }
+    }
+}
+
 #[component]
 fn AuthRequired() -> Element {
     let auth: Signal<ui::Auth> = use_context();
@@ -54,8 +74,10 @@ fn AuthRequired() -> Element {
         }
     });
 
+    let authed = use_memo(move || auth().is_authenticated());
+
     rsx! {
-        if auth().is_authenticated() {
+        if authed() {
             Outlet::<Route> {}
         }
     }

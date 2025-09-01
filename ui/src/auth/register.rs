@@ -10,7 +10,7 @@ pub fn Register(login: NavigationTarget, on_register: EventHandler) -> Element {
     let mut other_error = use_signal(|| None as Option<String>);
 
     rsx! {
-        div { class: "flex justify-center pt-30 w-full h-full",
+        div { class: "flex flex-col gap-4 items-center pt-30 w-full h-full",
             form { class: "flex flex-col gap-4 container h-fit p-4 border border-border rounded",
                 onsubmit: move |e| async move {
                     e.prevent_default();
@@ -43,8 +43,9 @@ pub fn Register(login: NavigationTarget, on_register: EventHandler) -> Element {
 
                 if !validated() {
                     button { class: "bg-primary text-primary-foreground rounded px-4 py-2 hover:bg-primary/90 transition", "Check" }
-                } else {
                 }
+            }
+            if validated() {
                 TotpSetup { username, show: validated, on_register }
             }
         }
@@ -97,7 +98,11 @@ fn TotpSetup(
             return;
         };
 
+        tracing::info!("Registering user: {}", username());
+
         let user = api::auth::register(username(), secret).await;
+
+        tracing::info!("Registered user: {:?}", user);
 
         if let Ok(user) = user {
             auth.set(crate::Auth::Authenticated {
@@ -130,11 +135,13 @@ fn TotpSetup(
                 }
 
                 form {
-                    onsubmit: move |e| async move {
+                    class: "flex flex-col gap-4 w-full",
+                    onsubmit: move |e| {
                         e.prevent_default();
                         e.stop_propagation();
-
-                        submit().await;
+                        async move {
+                            submit().await;
+                        }
                     },
                     input {
                         type: "text",
