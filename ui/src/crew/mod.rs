@@ -23,9 +23,10 @@ pub fn Crew<R: 'static + Clone + PartialEq + Routable>(
             div { class: "flex flex-col grow gap-2",
                 for character in crew_characters {
                     Link {
+                        class: "hover:bg-input hover:text-input-foreground p-2 rounded-lg",
                         to: to_character_page.call(character.id),
-                        h2 { "{character.name}" }
-                        p { "Class: {character.class}" }
+                        h2 { class: "text-xl", "{character.name}" }
+                        p { class: "italic", "{character.class}" }
                     }
                 }
             }

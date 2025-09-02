@@ -1,7 +1,10 @@
 use dioxus::prelude::*;
 use types::{Class, Description as DescriptionT};
 
-use crate::{common::ItemChecked, elements::{Description, Dialog}};
+use crate::{
+    common::ItemChecked,
+    elements::{Description, Dialog},
+};
 
 #[component]
 pub fn Center(character: Signal<types::Character>, readonly: ReadOnlySignal<bool>) -> Element {
@@ -84,7 +87,7 @@ fn AbilityDialog(open: Signal<bool>, character: Signal<types::Character>) -> Ele
                 h2 { class: "text-3xl", "Abilities" }
                 hr {}
                 div {
-                    class: "flex flex-col gap-2 max-h-full overflow-y-auto",
+                    class: "flex flex-col gap-4 max-h-full overflow-y-auto",
                     for ability in abilities() {
                         AbilityButton {
                             ability,
@@ -124,9 +127,35 @@ fn AbilityButton(
             onclick: move |e| {
                 e.stop_propagation();
                 let name = name.clone();
+                let name_a = name.clone();
+
+                let id = character().id;
+                let has = has_ability();
+
+                spawn(async move {
+                    if has {
+                        let res = api::character_remove_ability(id, name_a).await;
+                        #[cfg(debug_assertions)]
+                        {
+                            if let Err(e) = &res {
+                                tracing::error!("Failed to remove ability: {e}");
+                            }
+                        }
+                    } else {
+                        let res = api::character_add_ability(id, name_a).await;
+
+                        #[cfg(debug_assertions)]
+                        {
+                            if let Err(e) = &res {
+                                tracing::error!("Failed to add ability: {e}");
+                            }
+                        }
+                    }
+                });
+
                 character
                     .with_mut(move |char| {
-                        if has_ability() {
+                        if has {
                             char.abilities.retain(|a| *a != name);
                         } else {
                             char.abilities.push(name);
@@ -173,12 +202,31 @@ fn SlyFriends(character: Signal<types::Character>, readonly: ReadOnlySignal<bool
                                     char.contacts.friends.push(contact.to_string());
                                     char.contacts.rivals.retain(|c| c != contact);
                                 });
+
+                            spawn(async move {
+                                let res = api::character_add_contact(character().id, contact.to_string(), true).await;
+                                #[cfg(debug_assertions)]
+                                {
+                                    if let Err(e) = &res {
+                                        tracing::error!("Failed to add contact: {e}");
+                                    }
+                                }
+                            });
                         },
                         remove: move || {
                             character
                                 .with_mut(|char| {
                                     char.contacts.friends.retain(|c| c != contact);
-                                });
+                                });spawn(async move {
+                                let res = api::character_remove_contact(character().id, contact.to_string(), true).await;
+                                #[cfg(debug_assertions)]
+                                {
+                                    if let Err(e) = &res {
+                                        tracing::error!("Failed to add contact: {e}");
+                                    }
+                                }
+                            });
+
                         },
                     }
                     ContactTriangle {
@@ -190,13 +238,31 @@ fn SlyFriends(character: Signal<types::Character>, readonly: ReadOnlySignal<bool
                                 .with_mut(|char| {
                                     char.contacts.rivals.push(contact.to_string());
                                     char.contacts.friends.retain(|c| c != contact);
-                                });
+                                });spawn(async move {
+                                let res = api::character_add_contact(character().id, contact.to_string(), false).await;
+                                #[cfg(debug_assertions)]
+                                {
+                                    if let Err(e) = &res {
+                                        tracing::error!("Failed to add contact: {e}");
+                                    }
+                                }
+                            });
+
                         },
                         remove: move || {
                             character
                                 .with_mut(|char| {
                                     char.contacts.rivals.retain(|c| c != contact);
-                                });
+                                });spawn(async move {
+                                let res = api::character_remove_contact(character().id, contact.to_string(), false).await;
+                                #[cfg(debug_assertions)]
+                                {
+                                    if let Err(e) = &res {
+                                        tracing::error!("Failed to add contact: {e}");
+                                    }
+                                }
+                            });
+
                         },
                     }
                     span { "{contact}" }
@@ -291,6 +357,21 @@ fn ClassItems(character: Signal<types::Character>, readonly: ReadOnlySignal<bool
                         readonly,
                         checked: character().class_items.contains(&item.to_string()),
                         onclick: move |has| {
+                            spawn(async move {
+                                let res = if has {
+                                    api::character_add_class_item(character().id, item.to_string()).await
+                                } else {
+                                    api::character_remove_class_item(character().id, item.to_string()).await
+                                };
+
+                                #[cfg(debug_assertions)]
+                                {
+                                    if let Err(e) = &res {
+                                        tracing::error!("Failed to modify class item: {e}");
+                                    }
+                                }
+                            });
+
                             character
                                 .with_mut(|char| {
                                     if has {

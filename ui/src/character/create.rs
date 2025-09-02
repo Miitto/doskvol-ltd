@@ -35,17 +35,19 @@ pub fn CreateCharacter(
                         class: class()
                     };
 
+                    open.set(false);
                     on_create.call(char);
                 },
                 class: "flex flex-col gap-4",
                 input {
-                    class: "bg-input border border-border text-input-foreground",
+                    class: "bg-input p-2 rounded text-input-foreground",
                     placeholder: "Character Name",
                     onchange: move |e| {
                         name.set(e.value().clone());
                     }
                 }
                 select {
+                    class: "p-2",
                     onchange: move |e| {
                         if let Ok(c) =  std::convert::TryInto::<types::Class>::try_into(e.value().as_str()) {
                             class.set(c);
@@ -58,6 +60,13 @@ pub fn CreateCharacter(
                     option { value: "slide", "Slide" }
                     option { value: "spider", "Spider" }
                     option { value: "whisper", "Whisper" }
+                }
+
+                div {
+                    class: "flex justify-end",
+                    button {
+                        class: "bg-primary text-primary-foreground px-4 py-2 rounded",
+                        "Create Character" }
                 }
             }
         }

@@ -7,6 +7,23 @@ use crate::common::{CountBtn, ItemChecked};
 pub fn Right(readonly: ReadOnlySignal<bool>, character: Signal<types::Character>) -> Element {
     let coin = use_memo(move || character().coin);
     let stash = use_memo(move || character().stash);
+
+    use_effect(move || {
+        let id = character.peek().id;
+        let coin = coin();
+        let stash = stash();
+
+        spawn(async move {
+            let res = api::character_set_coin_stash(id, coin, stash).await;
+            #[cfg(debug_assertions)]
+            {
+                if let Err(e) = res {
+                    tracing::error!("Failed to set coin/stash: {e}");
+                }
+            }
+        });
+    });
+
     rsx! {
         div { class: "flex flex-col flex-auto lg:max-w-fit shrink p-4 pt-2 lg:pl-2 lg:pt-4",
             div { class: "flex flex-row gap-2 h-32 ",
@@ -85,12 +102,44 @@ fn Coin(coin: ReadOnlySignal<u8>, readonly: Option<bool>, set: EventHandler<u8>)
 
 #[component]
 fn Xp(character: Signal<Character>, readonly: ReadOnlySignal<bool>) -> Element {
+    let xp = use_memo(move || character().xp);
+    let dots = use_memo(move || character().dots);
+
+    use_effect(move || {
+        let id = character.peek().id;
+        let xp = xp();
+        spawn(async move {
+            let res = api::character_set_xp(id, xp).await;
+            #[cfg(debug_assertions)]
+            {
+                if let Err(e) = res {
+                    tracing::error!("Failed to set xp: {e}");
+                }
+            }
+        });
+    });
+
+    use_effect(move || {
+        let id = character.peek().id;
+        let dots = dots();
+
+        spawn(async move {
+            let res = api::character_set_dots(id, dots).await;
+            #[cfg(debug_assertions)]
+            {
+                if let Err(e) = res {
+                    tracing::error!("Failed to set dots: {e}");
+                }
+            }
+        });
+    });
+
     rsx! {
         XpLine {
             name: "Playbook",
             readonly,
             max: 8,
-            current: character().xp.playbook,
+            current: xp().playbook,
             set: move |count| {
                 character
                     .with_mut(|c| {
@@ -106,7 +155,7 @@ fn Xp(character: Signal<Character>, readonly: ReadOnlySignal<bool>) -> Element {
                     name: "Insight",
                     readonly,
                     max: 6,
-                    current: character().xp.insight,
+                    current: xp().insight,
                     set: move |count| {
                         character
                             .with_mut(|c| {
@@ -119,28 +168,28 @@ fn Xp(character: Signal<Character>, readonly: ReadOnlySignal<bool>) -> Element {
                     params: DotBlockParamList(
                         DotBlockParams {
                             name: "Hunt",
-                            current: character().dots.hunt,
+                            current: dots().hunt,
                             set: EventHandler::new(move |count| {
                                 character.with_mut(|c| c.dots.hunt = count)
                             }),
                         },
                         DotBlockParams {
                             name: "Study",
-                            current: character().dots.study,
+                            current: dots().study,
                             set: EventHandler::new(move |count| {
                                 character.with_mut(|c| c.dots.study = count)
                             }),
                         },
                         DotBlockParams {
                             name: "Survey",
-                            current: character().dots.survey,
+                            current: dots().survey,
                             set: EventHandler::new(move |count| {
                                 character.with_mut(|c| c.dots.survey = count)
                             }),
                         },
                         DotBlockParams {
                             name: "Tinker",
-                            current: character().dots.tinker,
+                            current: dots().tinker,
                             set: EventHandler::new(move |count| {
                                 character.with_mut(|c| c.dots.tinker = count)
                             }),
@@ -153,7 +202,7 @@ fn Xp(character: Signal<Character>, readonly: ReadOnlySignal<bool>) -> Element {
                     name: "Prowess",
                     readonly,
                     max: 6,
-                    current: character().xp.prowess,
+                    current: xp().prowess,
                     set: move |count| {
                         character
                             .with_mut(|c| {
@@ -168,28 +217,28 @@ fn Xp(character: Signal<Character>, readonly: ReadOnlySignal<bool>) -> Element {
                     params: DotBlockParamList(
                         DotBlockParams {
                             name: "Finesse",
-                            current: character().dots.finesse,
+                            current: dots().finesse,
                             set: EventHandler::new(move |count| {
                                 character.with_mut(|c| c.dots.finesse = count)
                             }),
                         },
                         DotBlockParams {
                             name: "Prowl",
-                            current: character().dots.prowl,
+                            current: dots().prowl,
                             set: EventHandler::new(move |count| {
                                 character.with_mut(|c| c.dots.prowl = count)
                             }),
                         },
                         DotBlockParams {
                             name: "Skirmish",
-                            current: character().dots.skirmish,
+                            current: dots().skirmish,
                             set: EventHandler::new(move |count| {
                                 character.with_mut(|c| c.dots.skirmish = count)
                             }),
                         },
                         DotBlockParams {
                             name: "Wreck",
-                            current: character().dots.wreck,
+                            current: dots().wreck,
                             set: EventHandler::new(move |count| {
                                 character.with_mut(|c| c.dots.wreck = count)
                             }),
@@ -203,7 +252,7 @@ fn Xp(character: Signal<Character>, readonly: ReadOnlySignal<bool>) -> Element {
                     name: "Resolve",
                     readonly,
                     max: 6,
-                    current: character().xp.resolve,
+                    current: xp().resolve,
                     set: move |count| {
                         character
                             .with_mut(|c| {
@@ -216,28 +265,28 @@ fn Xp(character: Signal<Character>, readonly: ReadOnlySignal<bool>) -> Element {
                     params: DotBlockParamList(
                         DotBlockParams {
                             name: "Attune",
-                            current: character().dots.attune,
+                            current: dots().attune,
                             set: EventHandler::new(move |count| {
                                 character.with_mut(|c| c.dots.attune = count)
                             }),
                         },
                         DotBlockParams {
                             name: "Command",
-                            current: character().dots.command,
+                            current: dots().command,
                             set: EventHandler::new(move |count| {
                                 character.with_mut(|c| c.dots.command = count)
                             }),
                         },
                         DotBlockParams {
                             name: "Consort",
-                            current: character().dots.consort,
+                            current: dots().consort,
                             set: EventHandler::new(move |count| {
                                 character.with_mut(|c| c.dots.consort = count)
                             }),
                         },
                         DotBlockParams {
                             name: "Sway",
-                            current: character().dots.sway,
+                            current: dots().sway,
                             set: EventHandler::new(move |count| {
                                 character.with_mut(|c| c.dots.sway = count)
                             }),
@@ -355,6 +404,38 @@ fn DotLine(readonly: ReadOnlySignal<bool>, params: DotBlockParams) -> Element {
 #[component]
 fn Items(character: Signal<Character>, readonly: ReadOnlySignal<bool>) -> Element {
     let load = use_memo(move || character().load);
+    let items = use_memo(move || character().items);
+
+    use_effect(move || {
+        let id = character.peek().id;
+        let load = load();
+
+        spawn(async move {
+            let res = api::character_set_load(id, load).await;
+            #[cfg(debug_assertions)]
+            {
+                if let Err(e) = res {
+                    tracing::error!("Failed to set load: {e}");
+                }
+            }
+        });
+    });
+
+    use_effect(move || {
+        let id = character.peek().id;
+        let items = items();
+
+        spawn(async move {
+            let res = api::character_set_items(id, items.bits()).await;
+            #[cfg(debug_assertions)]
+            {
+                if let Err(e) = res {
+                    tracing::error!("Failed to set items: {e}");
+                }
+            }
+        });
+    });
+
     rsx! {
         div { class: "flex flex-row gap-2 items-center lg:justify-between mb-4",
             ItemChecked {

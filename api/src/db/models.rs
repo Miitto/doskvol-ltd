@@ -85,6 +85,95 @@ pub struct Character {
     pub items: i32,
 }
 
+pub(crate) struct IntoCharacter<
+    A: Iterator<Item = CharacterAbility>,
+    C: Iterator<Item = CharacterContact>,
+    CI: Iterator<Item = CharacterClassItem>,
+> {
+    pub(crate) character: Character,
+    pub(crate) harm: CharacterHarm,
+    pub(crate) abilities: A,
+    pub(crate) contacts: C,
+    pub(crate) class_items: CI,
+    pub(crate) xp: CharacterXp,
+    pub(crate) dots: CharacterDots,
+}
+
+impl<
+        A: Iterator<Item = CharacterAbility>,
+        C: Iterator<Item = CharacterContact>,
+        CI: Iterator<Item = CharacterClassItem>,
+    > From<IntoCharacter<A, C, CI>> for types::Character
+{
+    fn from(
+        IntoCharacter {
+            character,
+            harm,
+            abilities,
+            contacts,
+            class_items,
+            xp,
+            dots,
+        }: IntoCharacter<A, C, CI>,
+    ) -> Self {
+        let abilities = abilities.map(|a| a.name).collect();
+        let class_items = class_items.map(|ci| ci.name).collect();
+
+        let contacts: (Vec<CharacterContact>, Vec<CharacterContact>) =
+            contacts.partition(|c| c.friend);
+
+        let contacts = types::Contacts {
+            friends: contacts.0.into_iter().map(|c| c.name).collect(),
+            rivals: contacts.1.into_iter().map(|c| c.name).collect(),
+        };
+
+        let load = character.load.map(|load| match load {
+            0 => types::Load::Light,
+            1 => types::Load::Medium,
+            2 => types::Load::Heavy,
+            _ => {
+                tracing::error!(
+                    "Character ({}) has invalid load value: {}",
+                    character.id,
+                    load
+                );
+                types::Load::Light
+            }
+        });
+
+        types::Character {
+            id: character.id,
+            user_id: character.user_id,
+            crew_id: character.crew_id,
+            name: character.name,
+            look: types::Description::new(character.look),
+            heritage: character.heritage,
+            background: character.background,
+            vice: character.vice,
+            stress: character.stress as u8,
+            trauma: types::TraumaFlags::from_bits_truncate(character.trauma as u8),
+            harm: types::Harm(
+                [harm.harm_1_1, harm.harm_1_2],
+                [harm.harm_2_1, harm.harm_2_2],
+                harm.harm_3,
+            ),
+            healing: character.healing as u8,
+            armor: types::ArmorFlags::from_bits_truncate(character.armor as u8),
+            notes: types::Description::new(character.notes),
+            class: character.class,
+            abilities,
+            contacts,
+            class_items,
+            stash: character.stash as u8,
+            coin: character.coin as u8,
+            xp: xp.into(),
+            dots: dots.into(),
+            load,
+            items: types::Items::from_bits_truncate(character.items as u16),
+        }
+    }
+}
+
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(feature = "server", derive(Insertable))]
 #[cfg_attr(feature = "server", diesel(table_name = crate::db::schema::characters))]
@@ -97,7 +186,7 @@ pub struct NewCharacter {
 
 #[cfg_attr(
     feature = "server",
-    derive(Queryable, Selectable, Associations, Identifiable)
+    derive(Queryable, Selectable, Associations, Identifiable, Insertable)
 )]
 #[cfg_attr(feature = "server", diesel(table_name = crate::db::schema::character_harm))]
 #[cfg_attr(feature = "server", diesel(belongs_to(Character)))]
@@ -111,6 +200,19 @@ pub struct CharacterHarm {
     pub harm_3: String,
 }
 
+impl CharacterHarm {
+    pub fn new(character_id: types::CharacterId) -> Self {
+        Self {
+            character_id,
+            harm_1_1: String::new(),
+            harm_1_2: String::new(),
+            harm_2_1: String::new(),
+            harm_2_2: String::new(),
+            harm_3: String::new(),
+        }
+    }
+}
+
 #[cfg_attr(
     feature = "server",
     derive(Queryable, Selectable, Associations, Identifiable)
@@ -119,6 +221,13 @@ pub struct CharacterHarm {
 #[cfg_attr(feature = "server", diesel(belongs_to(Character)))]
 pub struct CharacterAbility {
     pub id: i32,
+    pub character_id: types::CharacterId,
+    pub name: String,
+}
+
+#[cfg_attr(feature = "server", derive(Insertable))]
+#[cfg_attr(feature = "server", diesel(table_name = crate::db::schema::character_abilities))]
+pub struct NewCharacterAbility {
     pub character_id: types::CharacterId,
     pub name: String,
 }
@@ -136,6 +245,14 @@ pub struct CharacterContact {
     pub friend: bool,
 }
 
+#[cfg_attr(feature = "server", derive(Insertable))]
+#[cfg_attr(feature = "server", diesel(table_name = crate::db::schema::character_contacts))]
+pub struct NewCharacterContact {
+    pub character_id: types::CharacterId,
+    pub name: String,
+    pub friend: bool,
+}
+
 #[cfg_attr(
     feature = "server",
     derive(Queryable, Selectable, Associations, Identifiable)
@@ -148,9 +265,16 @@ pub struct CharacterClassItem {
     pub name: String,
 }
 
+#[cfg_attr(feature = "server", derive(Insertable))]
+#[cfg_attr(feature = "server", diesel(table_name = crate::db::schema::character_class_items))]
+pub struct NewCharacterClassItem {
+    pub character_id: types::CharacterId,
+    pub name: String,
+}
+
 #[cfg_attr(
     feature = "server",
-    derive(Queryable, Selectable, Associations, Identifiable)
+    derive(Queryable, Selectable, Associations, Identifiable, Insertable)
 )]
 #[cfg_attr(feature = "server", diesel(table_name = crate::db::schema::character_xp))]
 #[cfg_attr(feature = "server", diesel(belongs_to(Character)))]
@@ -161,6 +285,18 @@ pub struct CharacterXp {
     pub insight: i32,
     pub prowess: i32,
     pub resolve: i32,
+}
+
+impl CharacterXp {
+    pub fn new(character_id: types::CharacterId) -> Self {
+        Self {
+            character_id,
+            playbook: 0,
+            insight: 0,
+            prowess: 0,
+            resolve: 0,
+        }
+    }
 }
 
 impl From<CharacterXp> for types::XP {
@@ -176,7 +312,7 @@ impl From<CharacterXp> for types::XP {
 
 #[cfg_attr(
     feature = "server",
-    derive(Queryable, Selectable, Associations, Identifiable)
+    derive(Queryable, Selectable, Associations, Identifiable, Insertable)
 )]
 #[cfg_attr(feature = "server", diesel(table_name = crate::db::schema::character_dots))]
 #[cfg_attr(feature = "server", diesel(belongs_to(Character)))]
@@ -195,6 +331,26 @@ pub struct CharacterDots {
     pub command: i32,
     pub consort: i32,
     pub sway: i32,
+}
+
+impl CharacterDots {
+    pub fn new(character_id: types::CharacterId) -> Self {
+        Self {
+            character_id,
+            hunt: 0,
+            study: 0,
+            survey: 0,
+            tinker: 0,
+            finesse: 0,
+            prowl: 0,
+            skirmish: 0,
+            wreck: 0,
+            attune: 0,
+            command: 0,
+            consort: 0,
+            sway: 0,
+        }
+    }
 }
 
 impl From<CharacterDots> for types::Dots {

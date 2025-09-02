@@ -14,12 +14,8 @@ pub use auth::{login, register};
 
 pub use db::models::*;
 
-#[cfg(feature = "server")]
-fn launch_server() {
-    tokio::runtime::Runtime::new()
-        .expect("Failed to create Tokio runtime")
-        .block_on(async {});
-}
+mod character_updates;
+pub use character_updates::*;
 
 #[server(GetCharacter)]
 pub async fn get_character(id: types::CharacterId) -> Result<types::Character, ServerFnError> {
@@ -65,27 +61,19 @@ pub async fn get_character(id: types::CharacterId) -> Result<types::Character, S
             );
             ServerFnError::<NoCustomError>::ServerError("Corrupt character data".to_string())
         })?
-        .into_iter()
-        .map(|a| a.name);
+        .into_iter();
 
-    let contacts: (Vec<CharacterContact>, Vec<CharacterContact>) =
-        db::models::CharacterContact::belonging_to(&character)
-            .select(db::models::CharacterContact::as_select())
-            .load(&mut conn)
-            .map_err(|e| {
-                tracing::error!(
-                    "Failed to get contacts for charracter ({}): {e}",
-                    character.id
-                );
-                ServerFnError::<NoCustomError>::ServerError("Corrupt character data".to_string())
-            })?
-            .into_iter()
-            .partition(|a| a.friend);
-
-    let contacts = types::Contacts {
-        friends: contacts.0.into_iter().map(|c| c.name).collect(),
-        rivals: contacts.1.into_iter().map(|c| c.name).collect(),
-    };
+    let contacts = db::models::CharacterContact::belonging_to(&character)
+        .select(db::models::CharacterContact::as_select())
+        .load(&mut conn)
+        .map_err(|e| {
+            tracing::error!(
+                "Failed to get contacts for charracter ({}): {e}",
+                character.id
+            );
+            ServerFnError::<NoCustomError>::ServerError("Corrupt character data".to_string())
+        })?
+        .into_iter();
 
     let class_items = db::models::CharacterClassItem::belonging_to(&character)
         .select(db::models::CharacterClassItem::as_select())
@@ -97,8 +85,7 @@ pub async fn get_character(id: types::CharacterId) -> Result<types::Character, S
             );
             ServerFnError::<NoCustomError>::ServerError("Corrupt character data".to_string())
         })?
-        .into_iter()
-        .map(|c| c.name);
+        .into_iter();
 
     let xp = db::models::CharacterXp::belonging_to(&character)
         .select(db::models::CharacterXp::as_select())
@@ -116,50 +103,16 @@ pub async fn get_character(id: types::CharacterId) -> Result<types::Character, S
             ServerFnError::<NoCustomError>::ServerError("Corrupt character data".to_string())
         })?;
 
-    let load = character.load.map(|load| match load {
-        0 => types::Load::Light,
-        1 => types::Load::Medium,
-        2 => types::Load::Heavy,
-        _ => {
-            tracing::error!(
-                "Character ({}) has invalid load value: {}",
-                character.id,
-                load
-            );
-            types::Load::Light
-        }
-    });
-
-    let character = types::Character {
-        id: character.id,
-        user_id: character.user_id,
-        crew_id: character.crew_id,
-        name: character.name,
-        look: types::Description::new(character.look),
-        heritage: character.heritage,
-        background: character.background,
-        vice: character.vice,
-        stress: character.stress as u8,
-        trauma: types::TraumaFlags::from_bits_truncate(character.trauma as u8),
-        harm: types::Harm(
-            [harm.harm_1_1, harm.harm_1_2],
-            [harm.harm_2_1, harm.harm_2_2],
-            harm.harm_3,
-        ),
-        healing: character.healing as u8,
-        armor: types::ArmorFlags::from_bits_truncate(character.armor as u8),
-        notes: types::Description::new(character.notes),
-        class: character.class,
-        abilities: abilities.collect(),
+    let character = db::models::IntoCharacter {
+        character,
+        harm,
+        abilities,
+        class_items,
         contacts,
-        class_items: class_items.collect(),
-        stash: character.stash as u8,
-        coin: character.coin as u8,
-        xp: xp.into(),
-        dots: dots.into(),
-        load,
-        items: types::Items::from_bits_truncate(character.items as u16),
-    };
+        xp,
+        dots,
+    }
+    .into();
 
     Ok(character)
 }
@@ -168,12 +121,48 @@ pub async fn get_character(id: types::CharacterId) -> Result<types::Character, S
 pub async fn get_crew_characters(
     crew_id: types::CrewId,
 ) -> Result<Vec<types::CharacterPreview>, ServerFnError> {
-    todo!()
+    let mut conn = db::connect();
+
+    let members: Vec<db::models::Character> = db::schema::characters::table
+        .filter(db::schema::characters::crew_id.eq(crew_id))
+        .select(db::models::Character::as_select())
+        .get_results(&mut conn)
+        .map_err(|e| {
+            tracing::error!("Failed to get crew members for crew ({}): {e}", crew_id);
+            ServerFnError::<NoCustomError>::ServerError("Failed to load crew members".to_string())
+        })?;
+
+    Ok(members
+        .into_iter()
+        .map(|m| types::CharacterPreview {
+            id: m.id,
+            name: m.name,
+            class: m.class,
+            player_id: m.user_id,
+            crew_id,
+        })
+        .collect())
 }
 
 #[server(GetCrew)]
 pub async fn get_crew(id: types::CrewId) -> Result<types::Crew, ServerFnError> {
-    todo!()
+    let mut conn = db::connect();
+
+    let user = db::schema::crews::table
+        .find(id)
+        .select(db::models::Crew::as_select())
+        .first(&mut conn)
+        .map_err(|e| {
+            tracing::error!("Failed to find crew: {e}");
+            ServerFnError::<NoCustomError>::Request("Crew not found".to_string())
+        })?;
+
+    Ok(types::Crew {
+        id: user.id,
+        name: user.name,
+        specialty: user.specialty,
+        dm_id: user.dm_id,
+    })
 }
 
 #[server(GetAllCrews)]
@@ -248,5 +237,52 @@ pub async fn create_crew(crew: db::models::NewCrew) -> Result<types::Crew, Serve
 pub async fn create_character(
     character: db::models::NewCharacter,
 ) -> Result<types::Character, ServerFnError> {
-    todo!()
+    let mut conn = db::connect();
+
+    let character = diesel::insert_into(db::schema::characters::table)
+        .values(&character)
+        .returning(db::models::Character::as_returning())
+        .get_result::<db::models::Character>(&mut conn)
+        .map_err(|e| {
+            tracing::error!("Failed to insert new character: {e}");
+            ServerFnError::<NoCustomError>::ServerError("Failed to create character".to_string())
+        })?;
+
+    let harm = db::models::CharacterHarm::new(character.id);
+    diesel::insert_into(db::schema::character_harm::table)
+        .values(&harm)
+        .execute(&mut conn)
+        .map_err(|e| {
+            tracing::error!("Failed to insert new character harm: {e}");
+            ServerFnError::<NoCustomError>::ServerError("Failed to create character".to_string())
+        })?;
+
+    let xp = db::models::CharacterXp::new(character.id);
+    diesel::insert_into(db::schema::character_xp::table)
+        .values(&xp)
+        .execute(&mut conn)
+        .map_err(|e| {
+            tracing::error!("Failed to insert new character xp: {e}");
+            ServerFnError::<NoCustomError>::ServerError("Failed to create character".to_string())
+        })?;
+
+    let dots = db::models::CharacterDots::new(character.id);
+    diesel::insert_into(db::schema::character_dots::table)
+        .values(&dots)
+        .execute(&mut conn)
+        .map_err(|e| {
+            tracing::error!("Failed to insert new character dots: {e}");
+            ServerFnError::<NoCustomError>::ServerError("Failed to create character".to_string())
+        })?;
+
+    Ok(db::models::IntoCharacter {
+        character,
+        harm,
+        abilities: std::iter::empty(),
+        class_items: std::iter::empty(),
+        contacts: std::iter::empty(),
+        xp,
+        dots,
+    }
+    .into())
 }

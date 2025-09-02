@@ -8,18 +8,82 @@ use crate::elements::{Description, DescriptionEdit};
 
 #[component]
 pub fn Left(readonly: ReadOnlySignal<bool>, mut character: Signal<types::Character>) -> Element {
-    let name = use_signal(|| character().name);
-    let look = use_signal(|| character().look);
+    let name = use_memo(move || character().name);
+    let look = use_memo(move || character().look);
+
     let heritage = use_memo(move || character().heritage);
     let background = use_memo(move || character().background);
     let vice = use_memo(move || character().vice);
+
     let stress = use_memo(move || character().stress);
+    let trauma = use_memo(move || character().trauma);
+    let healing = use_memo(move || character().healing);
+    let armor = use_memo(move || character().armor);
+
+    use_effect(move || {
+        let heritage = heritage();
+        let background = background();
+        let vice = vice();
+        let id = character.peek().id;
+
+        spawn(async move {
+            let res = api::set_character_traits(id, heritage, background, vice).await;
+            #[cfg(debug_assertions)]
+            {
+                if let Err(err) = res {
+                    tracing::error!("Failed to set character traits: {:?}", err);
+                }
+            }
+        });
+    });
+
+    use_effect(move || {
+        let id = character.peek().id;
+        let look = look();
+
+        spawn(async move {
+            let res = api::set_character_look(id, look.to_string()).await;
+            #[cfg(debug_assertions)]
+            {
+                if let Err(err) = res {
+                    tracing::error!("Failed to set character look: {:?}", err);
+                }
+            }
+        });
+    });
+
+    use_effect(move || {
+        let id = character.peek().id;
+        let stress = stress();
+        let trauma = trauma().bits();
+        let healing = healing();
+        let armor = armor().bits();
+
+        spawn(async move {
+            let res =
+                api::set_character_stress_truama_healing_armor(id, stress, trauma, healing, armor)
+                    .await;
+
+            if let Err(err) = res {
+                tracing::error!(
+                    "Failed to set character stress/trauma/healing/armor: {:?}",
+                    err
+                );
+            }
+        });
+    });
 
     rsx! {
         div { class: "flex flex-col gap-2 flex-auto p-4 pb-2 lg:pr-2 lg:pb-4",
             h2 { class: "block text-4xl w-max max-w-full", "{name}" }
             if !readonly() {
-                input { class: "p-1", value: "{look}" }
+                input { class: "p-1", value: "{look}", onchange: move |e| {
+                    let val = e.value();
+                    character
+                        .with_mut(|char| {
+                            char.look = types::Description::new(val);
+                        });
+                } }
             } else {
                 Description { desc: look() }
             }
@@ -77,7 +141,7 @@ pub fn Left(readonly: ReadOnlySignal<bool>, mut character: Signal<types::Charact
                     div {
                         span { "Stress" }
                         span { class: "flex flex-row gap-1 items-center",
-                            for i in 0..9 {
+                            for i in 1..=9 {
                                 CountBtn {
                                     this: i,
                                     total: stress(),
@@ -95,7 +159,7 @@ pub fn Left(readonly: ReadOnlySignal<bool>, mut character: Signal<types::Charact
                     div {
                         span { "Trauma" }
                         span { class: "flex flex-row gap-1 items-center",
-                            for i in 0..4 {
+                            for i in 1..=4 {
                                 CountBtn {
                                     this: i,
                                     total: character().trauma.count_bits(),
@@ -119,7 +183,7 @@ pub fn Left(readonly: ReadOnlySignal<bool>, mut character: Signal<types::Charact
                 div { class: "flex flex-row gap-2 items-center",
                     span { "Healing" }
                     div { class: "flex flex-row gap-1 items-center",
-                        for i in 0..4 {
+                        for i in 1..=4 {
                             CountBtn {
                                 readonly: readonly(),
                                 this: i,
@@ -183,11 +247,24 @@ pub fn Left(readonly: ReadOnlySignal<bool>, mut character: Signal<types::Charact
                 DescriptionEdit {
                     desc: character().notes,
                     readonly: readonly(),
-                    on_change: move |desc| {
+                    on_change: move |desc: types::Description<String>| {
+                        let notes = desc.to_string();
                         character
                             .with_mut(|char| {
                                 char.notes = desc;
                             });
+
+                        let id = character().id;
+
+                        spawn(async move {
+                            let res = api::set_character_description(id, notes).await;
+                            #[cfg(debug_assertions)]
+                            {
+                                if let Err(err) = res {
+                                    tracing::error!("Failed to set character description: {:?}", err);
+                                }
+                            }
+                        });
                     },
                 }
             }
@@ -271,6 +348,21 @@ fn Harm(character: Signal<types::Character>, readonly: Option<bool>) -> Element 
     let readonly = readonly.unwrap_or(true);
     let harm = use_memo(move || character().harm);
 
+    use_effect(move || {
+        let id = character.peek().id;
+        let harm = harm();
+
+        spawn(async move {
+            let res = api::set_character_harm(id, harm).await;
+            #[cfg(debug_assertions)]
+            {
+                if let Err(err) = res {
+                    tracing::error!("Failed to set character harm: {:?}", err);
+                }
+            }
+        });
+    });
+
     rsx! {
         div { class: "grid grid-cols-[auto_1fr_auto]",
             HarmLine { num: 3, state: "Need Help",
@@ -278,32 +370,78 @@ fn Harm(character: Signal<types::Character>, readonly: Option<bool>) -> Element 
                     readonly,
                     class: "w-full h-full p-1 outline-hidden focus:outline-1 focus:outline-foreground focus:outline-solid focus:-outline-offset-1",
                     value: harm().2,
+                    oninput: move |e| {
+                        if readonly {
+                            return;
+                        }
+                        let val = e.value();
+                        character
+                            .with_mut(|char| {
+                                char.harm.2 = val;
+                            });
+                    },
                 }
             }
             HarmLine { num: 2, state: "-1D",
                 input {
                     readonly,
                     class: "w-full h-full p-1 outline-hidden focus:outline-1 focus:outline-foreground focus:outline-solid focus:-outline-offset-1",
-                    value: "{harm().1[0]}",
+                    value: "{harm().1[0]}",oninput: move |e| {
+                        if readonly {
+                            return;
+                        }
+                        let val = e.value();
+                        character
+                            .with_mut(|char| {
+                                char.harm.1[0] = val;
+                            });
+                    },
                 }
                 div { class: "bg-border w-px h-full" }
                 input {
                     readonly,
                     class: "w-full h-full p-1 outline-hidden focus:outline-1 focus:outline-foreground focus:outline-solid focus:-outline-offset-1",
-                    value: "{harm().1[1]}",
+                    value: "{harm().1[1]}",oninput: move |e| {
+                        if readonly {
+                            return;
+                        }
+                        let val = e.value();
+                        character
+                            .with_mut(|char| {
+                                char.harm.1[1] = val;
+                            });
+                    },
                 }
             }
             HarmLine { num: 1, state: "Less Effect",
                 input {
                     readonly,
                     class: "w-full h-full p-1 outline-hidden focus:outline-1 focus:outline-foreground focus:outline-solid focus:-outline-offset-1",
-                    value: "{harm().0[0]}",
+                    value: "{harm().0[0]}",oninput: move |e| {
+                        if readonly {
+                            return;
+                        }
+                        let val = e.value();
+                        character
+                            .with_mut(|char| {
+                                char.harm.0[0] = val;
+                            });
+                    },
                 }
                 div { class: "bg-border w-px h-full" }
                 input {
                     readonly,
                     class: "w-full h-full p-1 outline-hidden focus:outline-1 focus:outline-foreground focus:outline-solid focus:-outline-offset-1",
-                    value: "{harm().0[1]}",
+                    value: "{harm().0[1]}",oninput: move |e| {
+                        if readonly {
+                            return;
+                        }
+                        let val = e.value();
+                        character
+                            .with_mut(|char| {
+                                char.harm.0[1] = val;
+                            });
+                    },
                 }
             }
         }
