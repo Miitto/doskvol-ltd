@@ -20,31 +20,34 @@ pub struct Crew {
 #[cfg_attr(feature = "server", derive(diesel::FromSqlRow, diesel::AsExpression))]
 #[cfg_attr(feature = "server", diesel(sql_type = diesel::sql_types::Text))]
 pub enum CrewSpecialty {
-    Adepts,
-    Rooks,
-    Rovers,
-    Skulks,
-    Thugs,
+    Assassins,
+    Bravos,
+    Cult,
+    Hawkers,
+    Smugglers,
+    Shadows,
 }
 
 impl CrewSpecialty {
-    pub const ALL: [CrewSpecialty; 5] = [
-        CrewSpecialty::Adepts,
-        CrewSpecialty::Rooks,
-        CrewSpecialty::Rovers,
-        CrewSpecialty::Skulks,
-        CrewSpecialty::Thugs,
+    pub const ALL: [CrewSpecialty; 6] = [
+        CrewSpecialty::Assassins,
+        CrewSpecialty::Bravos,
+        CrewSpecialty::Cult,
+        CrewSpecialty::Hawkers,
+        CrewSpecialty::Smugglers,
+        CrewSpecialty::Shadows,
     ];
 }
 
 impl std::fmt::Display for CrewSpecialty {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            CrewSpecialty::Adepts => write!(f, "Adepts"),
-            CrewSpecialty::Rooks => write!(f, "Rooks"),
-            CrewSpecialty::Rovers => write!(f, "Rovers"),
-            CrewSpecialty::Skulks => write!(f, "Skulks"),
-            CrewSpecialty::Thugs => write!(f, "Thugs"),
+            CrewSpecialty::Assassins => write!(f, "Assassins"),
+            CrewSpecialty::Bravos => write!(f, "Bravos"),
+            CrewSpecialty::Cult => write!(f, "Cult"),
+            CrewSpecialty::Hawkers => write!(f, "Hawkers"),
+            CrewSpecialty::Smugglers => write!(f, "Smugglers"),
+            CrewSpecialty::Shadows => write!(f, "Shadows"),
         }
     }
 }
@@ -54,11 +57,12 @@ impl std::str::FromStr for CrewSpecialty {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "adepts" => Ok(CrewSpecialty::Adepts),
-            "rooks" => Ok(CrewSpecialty::Rooks),
-            "rovers" => Ok(CrewSpecialty::Rovers),
-            "skulks" => Ok(CrewSpecialty::Skulks),
-            "thugs" => Ok(CrewSpecialty::Thugs),
+            "assassins" => Ok(CrewSpecialty::Assassins),
+            "bravos" => Ok(CrewSpecialty::Bravos),
+            "cult" => Ok(CrewSpecialty::Cult),
+            "hawkers" => Ok(CrewSpecialty::Hawkers),
+            "smugglers" => Ok(CrewSpecialty::Smugglers),
+            "shadows" => Ok(CrewSpecialty::Shadows),
             _ => Err(format!("Invalid crew specialty: {s}")),
         }
     }

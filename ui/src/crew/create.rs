@@ -3,9 +3,11 @@ use dioxus::prelude::*;
 use crate::elements::Dialog;
 
 #[component]
-pub fn CreateCrew(on_create: EventHandler<api::NewCrew>, open: Signal<bool>) -> Element {
+pub fn CreateCrew(on_create: EventHandler<(api::NewCrew, String)>, open: Signal<bool>) -> Element {
     let mut name = use_signal(|| "".to_string());
-    let mut specialty = use_signal(|| types::CrewSpecialty::Adepts);
+    let mut specialty = use_signal(|| types::CrewSpecialty::Assassins);
+
+    let mut dm_name = use_signal(String::default);
 
     let currentUser = use_context::<Signal<crate::Auth>>();
     let currentUser = use_memo(move || match currentUser() {
@@ -30,7 +32,7 @@ pub fn CreateCrew(on_create: EventHandler<api::NewCrew>, open: Signal<bool>) -> 
                     if name().is_empty() {
                         return;
                     }
-                    on_create.call(new_crew);
+                    on_create.call((new_crew, dm_name()));
                     open.set(false);
                 },
                 input {
@@ -52,6 +54,12 @@ pub fn CreateCrew(on_create: EventHandler<api::NewCrew>, open: Signal<bool>) -> 
                             "{s}"
                         }
                     }
+                }
+                input {
+                    class: "border p-2 rounded w-full bg-input text-input-foreground",
+                    placeholder: "Name to display for DM",
+                    value: dm_name,
+                    onchange: move |e| dm_name.set(e.value()),
                 }
                 div { class: "flex flex-row justify-end gap-4",
                     button {

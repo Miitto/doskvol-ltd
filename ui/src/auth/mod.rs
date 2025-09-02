@@ -47,7 +47,7 @@ pub fn Login(register: NavigationTarget, on_login: EventHandler) -> Element {
                 p { class: "text-destructive", "{error}" }
             }
 
-            div { class: "flex justify-between",
+            div { class: "flex justify-between items-center",
                 Link {
                     to: register,
                     "Register"

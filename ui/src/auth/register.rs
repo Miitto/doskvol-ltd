@@ -15,6 +15,12 @@ pub fn Register(login: NavigationTarget, on_register: EventHandler) -> Element {
                 onsubmit: move |e| async move {
                     e.prevent_default();
 
+                    if username().is_empty() {
+                        name_error.set(Some("Username cannot be empty".into()));
+                        validated.set(false);
+                        return;
+                    }
+
                     if let Ok(e) = api::auth::check_username(username()).await {
                         name_error.set(e);
                         if name_error().is_none() {
@@ -26,23 +32,33 @@ pub fn Register(login: NavigationTarget, on_register: EventHandler) -> Element {
                         other_error.set(Some("Failed to check username".into()));
                     }
                 },
-                input {
-                    class: "bg-input p-2 rounded",
-                    value: "{username}",
-                    placeholder: "Username",
-                    oninput: move |e| {username.set(e.value()); validated.set(false);},
+                label { class: "flex flex-col gap-2",
+                    p { "Username" }
+                    input {
+                        class: "bg-input p-2 rounded",
+                        value: "{username}",
+                        placeholder: "Username",
+                        oninput: move |e| {username.set(e.value()); validated.set(false);},
+                    }
+                    p { class: "text-foreground/80", "This is your unique username used to log in and is not shown to other users. A seperate display name is used per crew."}
                 }
 
                 if let Some(error) = name_error() {
-                    p { class: "text-destructive", "{error}" }
+                    p { class: "text-destructive brightness-150", "{error}" }
                 }
 
                 if let Some(error) = other_error() {
-                    p { class: "text-destructive", "{error}" }
+                    p { class: "text-destructive brightness-150", "{error}" }
                 }
 
                 if !validated() {
-                    button { class: "bg-primary text-primary-foreground rounded px-4 py-2 hover:bg-primary/90 transition", "Check" }
+                    div { class: "flex justify-between items-center",
+                        Link {
+                            to: login,
+                            "Back to Login"
+                        }
+                        button { class: "bg-primary text-primary-foreground rounded px-4 py-2 hover:bg-primary/90 transition", "Check" }
+                    }
                 }
             }
             if validated() {

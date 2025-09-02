@@ -1,7 +1,7 @@
 CREATE TABLE crews (
   id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
   name TEXT NOT NULL,
-  specialty TEXT NOT NULL,
+  specialty TEXT CHECK(specialty in ('Assassins', 'Bravos', 'Cult', 'Hawkers', 'Smugglers', 'Shadows')) NOT NULL,
   dm_id TEXT NOT NULL,
   FOREIGN KEY (dm_id) REFERENCES users(username)
 );

@@ -211,7 +211,10 @@ pub async fn get_all_crews() -> Result<Vec<types::CrewPreview>, ServerFnError> {
 }
 
 #[server(CreateCrew)]
-pub async fn create_crew(crew: db::models::NewCrew) -> Result<types::Crew, ServerFnError> {
+pub async fn create_crew(
+    crew: db::models::NewCrew,
+    dm_name: String,
+) -> Result<types::Crew, ServerFnError> {
     use db::schema::crews::dsl::*;
 
     let mut conn = db::connect();
@@ -222,6 +225,18 @@ pub async fn create_crew(crew: db::models::NewCrew) -> Result<types::Crew, Serve
         .get_result(&mut conn)
         .map_err(|e| {
             tracing::error!("Failed to insert new crew: {e}");
+            ServerFnError::<NoCustomError>::ServerError("Failed to create crew".to_string())
+        })?;
+
+    diesel::insert_into(crew_members::table)
+        .values(&db::models::CrewMember {
+            crew_id: crew.id,
+            user_id: crew.dm_id.clone(),
+            display_name: dm_name,
+        })
+        .execute(&mut conn)
+        .map_err(|e| {
+            tracing::error!("Failed to insert new crew member: {e}");
             ServerFnError::<NoCustomError>::ServerError("Failed to create crew".to_string())
         })?;
 
@@ -285,4 +300,27 @@ pub async fn create_character(
         dots,
     }
     .into())
+}
+
+#[server(GetPlayerDisplayName)]
+pub async fn get_player_display_name(
+    crew_id: types::CrewId,
+    user_id: String,
+) -> Result<String, ServerFnError> {
+    let mut conn = db::connect();
+
+    let member: db::models::CrewMember = crew_members::table
+        .filter(
+            crew_members::crew_id
+                .eq(crew_id)
+                .and(crew_members::user_id.eq(user_id)),
+        )
+        .select(db::models::CrewMember::as_select())
+        .first(&mut conn)
+        .map_err(|e| {
+            tracing::error!("Failed to find crew member: {e}");
+            ServerFnError::<NoCustomError>::Request("Crew member not found".to_string())
+        })?;
+
+    Ok(member.display_name)
 }

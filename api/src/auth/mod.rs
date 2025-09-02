@@ -124,6 +124,14 @@ pub async fn register(username: String, totp_secret: String) -> Result<types::Us
 pub async fn check_username(username: String) -> Result<Option<String>, ServerFnError> {
     let mut conn = db::connect();
 
+    if username.is_empty() {
+        return Ok(Some("Usernames cannot be empty".to_string()));
+    }
+
+    if username.contains(':') {
+        return Ok(Some("Usernames cannot contain colons':'".to_string()));
+    }
+
     let count: i64 = db::schema::users::table
         .filter(db::schema::users::username.eq(username))
         .count()
@@ -134,7 +142,7 @@ pub async fn check_username(username: String) -> Result<Option<String>, ServerFn
         })?;
 
     if count > 0 {
-        Ok(Some("Username alrady in use".to_string()))
+        Ok(Some("Username already in use".to_string()))
     } else {
         Ok(None)
     }

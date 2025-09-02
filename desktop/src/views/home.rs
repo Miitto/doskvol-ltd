@@ -1,5 +1,5 @@
-use ui::crew::CreateCrew;
 use dioxus::{logger::tracing, prelude::*};
+use ui::crew::CreateCrew;
 
 #[component]
 pub fn Home() -> Element {
@@ -33,8 +33,8 @@ pub fn Home() -> Element {
         }
         CreateCrew {
             open: create_crew_open,
-            on_create: move |new_crew| async move {
-                let res = api::create_crew(new_crew).await;
+            on_create: move |(new_crew, dm_name)| async move {
+                let res = api::create_crew(new_crew, dm_name).await;
                 if let Err(err) = res {
                     tracing::error!("Failed to create crew: {:?}", err);
                 } else {
