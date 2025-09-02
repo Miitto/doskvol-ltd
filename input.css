@@ -32,4 +32,8 @@
   select {
     @apply bg-input text-foreground border border-border rounded-lg px-2 py-1;
   }
+
+  .linux select {
+    @apply text-black;
+  }
 }

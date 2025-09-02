@@ -49,9 +49,18 @@ fn App() -> Element {
 /// which allows us to use the desktop-specific `Route` enum.
 #[component]
 fn DesktopNavbar() -> Element {
+    let linux = if cfg!(target_os = "linux") {
+        "linux"
+    } else {
+        ""
+    };
+
     rsx! {
-        ui::Tailwind {}
-        Outlet::<Route> {}
+        div {
+            class: "{linux}",
+            ui::Tailwind {}
+            Outlet::<Route> {}
+        }
     }
 }
 
