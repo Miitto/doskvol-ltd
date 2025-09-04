@@ -27,7 +27,7 @@ pub fn Left(readonly: ReadOnlySignal<bool>, mut character: Signal<types::Charact
         let id = character.peek().id;
 
         spawn(async move {
-            let res = api::set_character_traits(id, heritage, background, vice).await;
+            let res = api::character::set_traits(id, heritage, background, vice).await;
             #[cfg(debug_assertions)]
             {
                 if let Err(err) = res {
@@ -42,7 +42,7 @@ pub fn Left(readonly: ReadOnlySignal<bool>, mut character: Signal<types::Charact
         let look = look();
 
         spawn(async move {
-            let res = api::set_character_look(id, look.to_string()).await;
+            let res = api::character::set_look(id, look.to_string()).await;
             #[cfg(debug_assertions)]
             {
                 if let Err(err) = res {
@@ -61,7 +61,7 @@ pub fn Left(readonly: ReadOnlySignal<bool>, mut character: Signal<types::Charact
 
         spawn(async move {
             let res =
-                api::set_character_stress_truama_healing_armor(id, stress, trauma, healing, armor)
+                api::character::set_stress_truama_healing_armor(id, stress, trauma, healing, armor)
                     .await;
 
             if let Err(err) = res {
@@ -257,7 +257,7 @@ pub fn Left(readonly: ReadOnlySignal<bool>, mut character: Signal<types::Charact
                         let id = character().id;
 
                         spawn(async move {
-                            let res = api::set_character_description(id, notes).await;
+                            let res = api::character::set_description(id, notes).await;
                             #[cfg(debug_assertions)]
                             {
                                 if let Err(err) = res {
@@ -353,7 +353,7 @@ fn Harm(character: Signal<types::Character>, readonly: Option<bool>) -> Element 
         let harm = harm();
 
         spawn(async move {
-            let res = api::set_character_harm(id, harm).await;
+            let res = api::character::set_harm(id, harm).await;
             #[cfg(debug_assertions)]
             {
                 if let Err(err) = res {

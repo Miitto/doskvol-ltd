@@ -1,0 +1,7 @@
+CREATE TABLE crew_invites (
+  code TEXT PRIMARY KEY NOT NULL,
+  crew_id INTEGER NOT NULL,
+  used INTEGER NOT NULL DEFAULT 0,
+  max_uses INTEGER NOT NULL,
+  FOREIGN KEY (crew_id) REFERENCES crews(id) ON DELETE CASCADE
+);

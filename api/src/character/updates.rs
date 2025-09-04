@@ -1,16 +1,40 @@
+#[cfg(feature = "server")]
 use diesel::prelude::*;
 use dioxus::prelude::{server_fn::error::NoCustomError, *};
 
 use crate::db;
 
-#[server(SetCharacterTraits)]
-pub async fn set_character_traits(
+#[cfg(feature = "server")]
+fn is_own_character(char_id: types::CharacterId, username: &str) -> bool {
+    use crate::db::schema::characters::dsl;
+    let mut conn = db::connect();
+
+    dsl::characters
+        .find(char_id)
+        .filter(dsl::user_id.eq(username))
+        .select(db::models::Character::as_select())
+        .first::<db::models::Character>(&mut conn)
+        .is_ok()
+}
+
+#[data::cfg_server("character/set_traits")]
+pub async fn set_traits(
     id: types::CharacterId,
     heritage: types::Heritage,
     background: types::Background,
     vice: types::Vice,
 ) -> Result<(), ServerFnError> {
     use db::schema::characters::dsl;
+
+    let user = crate::auth::session::get_current_user()
+        .await
+        .ok_or_else(|| ServerFnError::<NoCustomError>::Request("Not authenticated".to_string()))?;
+
+    if !is_own_character(id, &user.username) {
+        return Err(ServerFnError::<NoCustomError>::Request(
+            "Character not found".to_string(),
+        ));
+    }
 
     let mut conn = db::connect();
 
@@ -29,8 +53,17 @@ pub async fn set_character_traits(
     Ok(())
 }
 
-#[server(SetCharacterLook)]
-pub async fn set_character_look(id: types::CharacterId, look: String) -> Result<(), ServerFnError> {
+#[data::cfg_server("character/set_look")]
+pub async fn set_look(id: types::CharacterId, look: String) -> Result<(), ServerFnError> {
+    let user = crate::auth::session::get_current_user()
+        .await
+        .ok_or_else(|| ServerFnError::<NoCustomError>::Request("Not authenticated".to_string()))?;
+
+    if !is_own_character(id, &user.username) {
+        return Err(ServerFnError::<NoCustomError>::Request(
+            "Character not found".to_string(),
+        ));
+    }
     use db::schema::characters::dsl;
 
     let mut conn = db::connect();
@@ -46,14 +79,23 @@ pub async fn set_character_look(id: types::CharacterId, look: String) -> Result<
     Ok(())
 }
 
-#[server(SetCharacterStressTruamaHealingArmor)]
-pub async fn set_character_stress_truama_healing_armor(
+#[data::cfg_server("character/set_stress_trauma_healing_armor")]
+pub async fn set_stress_truama_healing_armor(
     id: types::CharacterId,
     stress: u8,
     trauma: u8,
     healing: u8,
     armor: u8,
 ) -> Result<(), ServerFnError> {
+    let user = crate::auth::session::get_current_user()
+        .await
+        .ok_or_else(|| ServerFnError::<NoCustomError>::Request("Not authenticated".to_string()))?;
+
+    if !is_own_character(id, &user.username) {
+        return Err(ServerFnError::<NoCustomError>::Request(
+            "Character not found".to_string(),
+        ));
+    }
     use db::schema::characters::dsl;
 
     let mut conn = db::connect();
@@ -74,11 +116,17 @@ pub async fn set_character_stress_truama_healing_armor(
     Ok(())
 }
 
-#[server(SetCharacterHarm)]
-pub async fn set_character_harm(
-    id: types::CharacterId,
-    harm: types::Harm,
-) -> Result<(), ServerFnError> {
+#[data::cfg_server("character/set_harm")]
+pub async fn set_harm(id: types::CharacterId, harm: types::Harm) -> Result<(), ServerFnError> {
+    let user = crate::auth::session::get_current_user()
+        .await
+        .ok_or_else(|| ServerFnError::<NoCustomError>::Request("Not authenticated".to_string()))?;
+
+    if !is_own_character(id, &user.username) {
+        return Err(ServerFnError::<NoCustomError>::Request(
+            "Character not found".to_string(),
+        ));
+    }
     use db::schema::character_harm::dsl;
 
     let mut conn = db::connect();
@@ -100,11 +148,17 @@ pub async fn set_character_harm(
     Ok(())
 }
 
-#[server(SetCharacterNotes)]
-pub async fn set_character_description(
-    id: types::CharacterId,
-    notes: String,
-) -> Result<(), ServerFnError> {
+#[data::cfg_server("character/set_description")]
+pub async fn set_description(id: types::CharacterId, notes: String) -> Result<(), ServerFnError> {
+    let user = crate::auth::session::get_current_user()
+        .await
+        .ok_or_else(|| ServerFnError::<NoCustomError>::Request("Not authenticated".to_string()))?;
+
+    if !is_own_character(id, &user.username) {
+        return Err(ServerFnError::<NoCustomError>::Request(
+            "Character not found".to_string(),
+        ));
+    }
     use db::schema::characters::dsl;
 
     let mut conn = db::connect();
@@ -120,11 +174,20 @@ pub async fn set_character_description(
     Ok(())
 }
 
-#[server(CharacterAddAbility)]
-pub async fn character_add_ability(
+#[data::cfg_server("character/add_ability")]
+pub async fn add_ability(
     character_id: types::CharacterId,
     name: String,
 ) -> Result<(), ServerFnError> {
+    let user = crate::auth::session::get_current_user()
+        .await
+        .ok_or_else(|| ServerFnError::<NoCustomError>::Request("Not authenticated".to_string()))?;
+
+    if !is_own_character(character_id, &user.username) {
+        return Err(ServerFnError::<NoCustomError>::Request(
+            "Character not found".to_string(),
+        ));
+    }
     use db::schema::character_abilities;
 
     let mut conn = db::connect();
@@ -142,11 +205,20 @@ pub async fn character_add_ability(
     Ok(())
 }
 
-#[server(CharacterRemoveAbility)]
-pub async fn character_remove_ability(
+#[data::cfg_server("character/remove_ability")]
+pub async fn remove_ability(
     character_id: types::CharacterId,
     name: String,
 ) -> Result<(), ServerFnError> {
+    let user = crate::auth::session::get_current_user()
+        .await
+        .ok_or_else(|| ServerFnError::<NoCustomError>::Request("Not authenticated".to_string()))?;
+
+    if !is_own_character(character_id, &user.username) {
+        return Err(ServerFnError::<NoCustomError>::Request(
+            "Character not found".to_string(),
+        ));
+    }
     use db::schema::character_abilities::dsl;
 
     let mut conn = db::connect();
@@ -165,12 +237,21 @@ pub async fn character_remove_ability(
     Ok(())
 }
 
-#[server(CharacterAddContact)]
-pub async fn character_add_contact(
+#[data::cfg_server("character/add_contact")]
+pub async fn add_contact(
     character_id: types::CharacterId,
     name: String,
     friend: bool,
 ) -> Result<(), ServerFnError> {
+    let user = crate::auth::session::get_current_user()
+        .await
+        .ok_or_else(|| ServerFnError::<NoCustomError>::Request("Not authenticated".to_string()))?;
+
+    if !is_own_character(character_id, &user.username) {
+        return Err(ServerFnError::<NoCustomError>::Request(
+            "Character not found".to_string(),
+        ));
+    }
     use db::schema::character_contacts;
 
     let mut conn = db::connect();
@@ -192,12 +273,21 @@ pub async fn character_add_contact(
     Ok(())
 }
 
-#[server(CharacterRemoveContact)]
-pub async fn character_remove_contact(
+#[data::cfg_server("character/remove_contact")]
+pub async fn remove_contact(
     character_id: types::CharacterId,
     name: String,
     friend: bool,
 ) -> Result<(), ServerFnError> {
+    let user = crate::auth::session::get_current_user()
+        .await
+        .ok_or_else(|| ServerFnError::<NoCustomError>::Request("Not authenticated".to_string()))?;
+
+    if !is_own_character(character_id, &user.username) {
+        return Err(ServerFnError::<NoCustomError>::Request(
+            "Character not found".to_string(),
+        ));
+    }
     use db::schema::character_contacts::dsl;
 
     let mut conn = db::connect();
@@ -217,11 +307,20 @@ pub async fn character_remove_contact(
     Ok(())
 }
 
-#[server(CharacterAddClassItem)]
-pub async fn character_add_class_item(
+#[data::cfg_server("character/add_class_item")]
+pub async fn add_class_item(
     character_id: types::CharacterId,
     name: String,
 ) -> Result<(), ServerFnError> {
+    let user = crate::auth::session::get_current_user()
+        .await
+        .ok_or_else(|| ServerFnError::<NoCustomError>::Request("Not authenticated".to_string()))?;
+
+    if !is_own_character(character_id, &user.username) {
+        return Err(ServerFnError::<NoCustomError>::Request(
+            "Character not found".to_string(),
+        ));
+    }
     use db::schema::character_class_items;
 
     let mut conn = db::connect();
@@ -239,11 +338,20 @@ pub async fn character_add_class_item(
     Ok(())
 }
 
-#[server(CharacterRemoveClassItem)]
-pub async fn character_remove_class_item(
+#[data::cfg_server("character/remove_class_item")]
+pub async fn remove_class_item(
     character_id: types::CharacterId,
     name: String,
 ) -> Result<(), ServerFnError> {
+    let user = crate::auth::session::get_current_user()
+        .await
+        .ok_or_else(|| ServerFnError::<NoCustomError>::Request("Not authenticated".to_string()))?;
+
+    if !is_own_character(character_id, &user.username) {
+        return Err(ServerFnError::<NoCustomError>::Request(
+            "Character not found".to_string(),
+        ));
+    }
     use db::schema::character_class_items::dsl;
 
     let mut conn = db::connect();
@@ -262,12 +370,21 @@ pub async fn character_remove_class_item(
     Ok(())
 }
 
-#[server(SetCharacterCoinStash)]
-pub async fn character_set_coin_stash(
+#[data::cfg_server("character/set_coin_stash")]
+pub async fn set_coin_stash(
     character_id: types::CharacterId,
     coin: u8,
     stash: u8,
 ) -> Result<(), ServerFnError> {
+    let user = crate::auth::session::get_current_user()
+        .await
+        .ok_or_else(|| ServerFnError::<NoCustomError>::Request("Not authenticated".to_string()))?;
+
+    if !is_own_character(character_id, &user.username) {
+        return Err(ServerFnError::<NoCustomError>::Request(
+            "Character not found".to_string(),
+        ));
+    }
     use db::schema::characters::dsl;
 
     let mut conn = db::connect();
@@ -283,11 +400,17 @@ pub async fn character_set_coin_stash(
     Ok(())
 }
 
-#[server(CharacterSetXp)]
-pub async fn character_set_xp(
-    character_id: types::CharacterId,
-    xp: types::XP,
-) -> Result<(), ServerFnError> {
+#[data::cfg_server("character/set_xp")]
+pub async fn set_xp(character_id: types::CharacterId, xp: types::XP) -> Result<(), ServerFnError> {
+    let user = crate::auth::session::get_current_user()
+        .await
+        .ok_or_else(|| ServerFnError::<NoCustomError>::Request("Not authenticated".to_string()))?;
+
+    if !is_own_character(character_id, &user.username) {
+        return Err(ServerFnError::<NoCustomError>::Request(
+            "Character not found".to_string(),
+        ));
+    }
     use db::schema::character_xp::dsl;
 
     let mut conn = db::connect();
@@ -308,11 +431,20 @@ pub async fn character_set_xp(
     Ok(())
 }
 
-#[server(SetCharacterDots)]
-pub async fn character_set_dots(
+#[data::cfg_server("character/set_dots")]
+pub async fn set_dots(
     character_id: types::CharacterId,
     dots: types::Dots,
 ) -> Result<(), ServerFnError> {
+    let user = crate::auth::session::get_current_user()
+        .await
+        .ok_or_else(|| ServerFnError::<NoCustomError>::Request("Not authenticated".to_string()))?;
+
+    if !is_own_character(character_id, &user.username) {
+        return Err(ServerFnError::<NoCustomError>::Request(
+            "Character not found".to_string(),
+        ));
+    }
     use db::schema::character_dots::dsl;
 
     let mut conn = db::connect();
@@ -341,11 +473,20 @@ pub async fn character_set_dots(
     Ok(())
 }
 
-#[server(CharacterSetLoad)]
-pub async fn character_set_load(
+#[data::cfg_server("character/set_load")]
+pub async fn set_load(
     character_id: types::CharacterId,
     load: Option<types::Load>,
 ) -> Result<(), ServerFnError> {
+    let user = crate::auth::session::get_current_user()
+        .await
+        .ok_or_else(|| ServerFnError::<NoCustomError>::Request("Not authenticated".to_string()))?;
+
+    if !is_own_character(character_id, &user.username) {
+        return Err(ServerFnError::<NoCustomError>::Request(
+            "Character not found".to_string(),
+        ));
+    }
     use db::schema::characters::dsl;
 
     let mut conn = db::connect();
@@ -367,11 +508,17 @@ pub async fn character_set_load(
     Ok(())
 }
 
-#[server(CharacterSetItems)]
-pub async fn character_set_items(
-    character_id: types::CharacterId,
-    items: u16,
-) -> Result<(), ServerFnError> {
+#[data::cfg_server("character/set_items")]
+pub async fn set_items(character_id: types::CharacterId, items: u16) -> Result<(), ServerFnError> {
+    let user = crate::auth::session::get_current_user()
+        .await
+        .ok_or_else(|| ServerFnError::<NoCustomError>::Request("Not authenticated".to_string()))?;
+
+    if !is_own_character(character_id, &user.username) {
+        return Err(ServerFnError::<NoCustomError>::Request(
+            "Character not found".to_string(),
+        ));
+    }
     use db::schema::characters::dsl;
 
     let mut conn = db::connect();

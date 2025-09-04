@@ -8,6 +8,7 @@ mod views;
 #[rustfmt::skip]
 enum Route {
     #[layout(DesktopNavbar)]
+    #[layout(AuthManager)]
         #[route("/login")]
         Login {},
         #[route("/register")]
@@ -55,9 +56,21 @@ fn DesktopNavbar() -> Element {
         ""
     };
 
+    let nav = use_navigator();
+
     rsx! {
         div {
-            class: "{linux}",
+            class: "{linux} flex flex-col",
+            div {
+                class: "border-b border-border",
+                button {
+                    class: "hover:underline w-fit p-2 rounded-lg",
+                    onclick: move |_| {
+                        nav.go_back();
+                    },
+                    "Back"
+                }
+            }
             ui::Tailwind {}
             Outlet::<Route> {}
         }
@@ -73,17 +86,54 @@ fn PageNotFound(route: Vec<String>) -> Element {
 }
 
 #[component]
-fn AuthRequired() -> Element {
-    let auth: Signal<ui::Auth> = use_context();
+fn AuthManager() -> Element {
+    let mut redir_from = use_signal(|| None as Option<Route>);
+    use_context_provider(|| redir_from);
+
+    let auth: ui::Auth = use_context();
+    let mut is_authed = auth.is_authenticated();
     let nav = use_navigator();
 
+    let route: Route = use_route();
+
     use_effect(move || {
-        if auth().is_anon() {
+        if auth.is_authenticated() {
+            if !is_authed {
+                let to = redir_from.peek().clone();
+                redir_from.set(None);
+                nav.replace(to.unwrap_or(Route::Home {}));
+                is_authed = true;
+            } else if matches!(route, Route::Login {} | Route::Register {}) {
+                nav.replace(Route::Home {});
+            }
+        } else if !auth.is_authenticated() {
+            is_authed = false;
+        }
+    });
+
+    rsx! {
+        Outlet::<Route> {}
+    }
+}
+
+#[component]
+fn AuthRequired() -> Element {
+    let auth: ui::Auth = use_context();
+    let nav = use_navigator();
+
+    let current: Route = use_route();
+    let mut redir_from = use_context::<Signal<Option<Route>>>();
+
+    use_effect(move || {
+        dioxus::logger::tracing::trace!("Auth changed: {:?}", auth.is_authenticated());
+        if auth.is_anon() {
+            dioxus::logger::tracing::info!("User is not authenticated, redirecting to login");
+            redir_from.set(Some(current.clone()));
             nav.replace(Route::Login {});
         }
     });
 
-    let authed = use_memo(move || auth().is_authenticated());
+    let authed = use_memo(move || auth.is_authenticated());
 
     rsx! {
         if authed() {

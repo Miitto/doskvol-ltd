@@ -11,5 +11,5 @@ types = { workspace = true }
 
 [features]
 default = []
-desktop = ["dioxus/desktop"]
+desktop = ["dioxus/desktop", "api/desktop"]
 server = ["dioxus/server", "api/server"]

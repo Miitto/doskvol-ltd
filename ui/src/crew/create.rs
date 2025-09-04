@@ -9,12 +9,11 @@ pub fn CreateCrew(on_create: EventHandler<(api::NewCrew, String)>, open: Signal<
 
     let mut dm_name = use_signal(String::default);
 
-    let currentUser = use_context::<Signal<crate::Auth>>();
-    let currentUser = use_memo(move || match currentUser() {
-        crate::Auth::Authenticated { username } => username.clone(),
-        crate::Auth::Anon => {
-            panic!("CreateCharacter rendered while not authenticated");
-        }
+    let currentUser = use_context::<crate::Auth>();
+    let currentUser = use_memo(move || {
+        currentUser
+            .username()
+            .expect("User should be authenticated")
     });
 
     rsx! {

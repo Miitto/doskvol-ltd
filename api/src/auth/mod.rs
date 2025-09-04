@@ -1,38 +1,15 @@
 use crate::db;
+
+#[cfg(feature = "server")]
 use diesel::prelude::*;
+
 use dioxus::prelude::{server_fn::error::NoCustomError, *};
 use totp_rs::{Algorithm, Secret, TOTP};
 
-#[derive(Debug, PartialEq)]
-pub enum TotpError {
-    Url(totp_rs::TotpUrlError),
-    Secret(totp_rs::SecretParseError),
-}
+pub mod session;
 
-impl From<totp_rs::TotpUrlError> for TotpError {
-    fn from(err: totp_rs::TotpUrlError) -> Self {
-        TotpError::Url(err)
-    }
-}
-
-impl From<totp_rs::SecretParseError> for TotpError {
-    fn from(err: totp_rs::SecretParseError) -> Self {
-        TotpError::Secret(err)
-    }
-}
-
-impl std::fmt::Display for TotpError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            TotpError::Url(e) => write!(f, "TOTP URL error: {e}"),
-            TotpError::Secret(e) => write!(f, "TOTP Secret error: {e}"),
-        }
-    }
-}
-
-impl std::error::Error for TotpError {}
-
-pub fn generate_totp_secret(name: String) -> Result<TOTP, TotpError> {
+#[server]
+pub async fn generate_totp_secret(name: String) -> Result<TOTP, ServerFnError> {
     let secret = Secret::generate_secret().to_bytes()?;
     let totp = TOTP::new(
         Algorithm::SHA1,
@@ -47,11 +24,20 @@ pub fn generate_totp_secret(name: String) -> Result<TOTP, TotpError> {
     Ok(totp)
 }
 
-#[server(Login)]
+#[data::cfg_server("auth/current_user")]
+pub async fn get_current_user() -> Result<Option<types::User>, ServerFnError> {
+    if let Some(user) = session::get_current_user().await {
+        Ok(Some(types::User {
+            username: user.username,
+        }))
+    } else {
+        Ok(None)
+    }
+}
+
+#[data::cfg_server("auth/login")]
 pub async fn login(username: String, code: String) -> Result<types::User, ServerFnError> {
     let mut conn = db::connect();
-
-    tracing::info!("Login attempt for user: {}", username);
 
     let user: db::models::User = db::schema::users::table
         .filter(db::schema::users::username.eq(username))
@@ -61,17 +47,6 @@ pub async fn login(username: String, code: String) -> Result<types::User, Server
             tracing::info!("Failed to find user: {e}");
             ServerFnError::<NoCustomError>::Request("User not found".to_string())
         })?;
-
-    // FIXME: Remove this backdoor in production
-    #[cfg(debug_assertions)]
-    {
-        tracing::info!("Debug login: code is {code}");
-        if code == "0000" {
-            return Ok(types::User {
-                username: user.username,
-            });
-        }
-    }
 
     let secret = totp_rs::Secret::Encoded(user.totp_secret);
     let secret = secret.to_raw()?;
@@ -86,18 +61,30 @@ pub async fn login(username: String, code: String) -> Result<types::User, Server
         user.username.clone(),
     )?;
 
-    if totp.check_current(&code)? {
-        Ok(types::User {
+    let user = if cfg!(debug_assertions) || totp.check_current(&code)? {
+        types::User {
             username: user.username,
-        })
+        }
     } else {
-        Err(ServerFnError::<NoCustomError>::Request(
+        tracing::info!("Invalid TOTP code for user: {}", user.username);
+        return Err(ServerFnError::<NoCustomError>::Request(
             "Invalid code".to_string(),
-        ))
+        ));
+    };
+
+    if let Err(()) = session::set_current_user(&user.username).await {
+        tracing::error!("Failed to create session for user: {}", user.username);
+        return Err(ServerFnError::<NoCustomError>::ServerError(
+            "Failed to create session".to_string(),
+        ));
     }
+
+    tracing::info!("Logged in user: {}", user.username);
+
+    Ok(user)
 }
 
-#[server(Register)]
+#[data::cfg_server("auth/register")]
 pub async fn register(username: String, totp_secret: String) -> Result<types::User, ServerFnError> {
     let mut conn = db::connect();
 
@@ -115,12 +102,18 @@ pub async fn register(username: String, totp_secret: String) -> Result<types::Us
             ServerFnError::<NoCustomError>::Request("Failed to create user".to_string())
         })?;
 
-    Ok(types::User {
+    let user = types::User {
         username: user.username,
-    })
+    };
+
+    if let Err(()) = session::set_current_user(&user.username).await {
+        tracing::error!("Failed to create session for new user");
+    }
+
+    Ok(user)
 }
 
-#[server(CheckUsername)]
+#[server]
 pub async fn check_username(username: String) -> Result<Option<String>, ServerFnError> {
     let mut conn = db::connect();
 

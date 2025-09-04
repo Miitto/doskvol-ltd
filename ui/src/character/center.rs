@@ -134,7 +134,7 @@ fn AbilityButton(
 
                 spawn(async move {
                     if has {
-                        let res = api::character_remove_ability(id, name_a).await;
+                        let res = api::character::remove_ability(id, name_a).await;
                         #[cfg(debug_assertions)]
                         {
                             if let Err(e) = &res {
@@ -142,7 +142,7 @@ fn AbilityButton(
                             }
                         }
                     } else {
-                        let res = api::character_add_ability(id, name_a).await;
+                        let res = api::character::add_ability(id, name_a).await;
 
                         #[cfg(debug_assertions)]
                         {
@@ -204,7 +204,7 @@ fn SlyFriends(character: Signal<types::Character>, readonly: ReadOnlySignal<bool
                                 });
 
                             spawn(async move {
-                                let res = api::character_add_contact(character().id, contact.to_string(), true).await;
+                                let res = api::character::add_contact(character().id, contact.to_string(), true).await;
                                 #[cfg(debug_assertions)]
                                 {
                                     if let Err(e) = &res {
@@ -218,7 +218,7 @@ fn SlyFriends(character: Signal<types::Character>, readonly: ReadOnlySignal<bool
                                 .with_mut(|char| {
                                     char.contacts.friends.retain(|c| c != contact);
                                 });spawn(async move {
-                                let res = api::character_remove_contact(character().id, contact.to_string(), true).await;
+                                let res = api::character::remove_contact(character().id, contact.to_string(), true).await;
                                 #[cfg(debug_assertions)]
                                 {
                                     if let Err(e) = &res {
@@ -239,7 +239,7 @@ fn SlyFriends(character: Signal<types::Character>, readonly: ReadOnlySignal<bool
                                     char.contacts.rivals.push(contact.to_string());
                                     char.contacts.friends.retain(|c| c != contact);
                                 });spawn(async move {
-                                let res = api::character_add_contact(character().id, contact.to_string(), false).await;
+                                let res = api::character::add_contact(character().id, contact.to_string(), false).await;
                                 #[cfg(debug_assertions)]
                                 {
                                     if let Err(e) = &res {
@@ -254,7 +254,7 @@ fn SlyFriends(character: Signal<types::Character>, readonly: ReadOnlySignal<bool
                                 .with_mut(|char| {
                                     char.contacts.rivals.retain(|c| c != contact);
                                 });spawn(async move {
-                                let res = api::character_remove_contact(character().id, contact.to_string(), false).await;
+                                let res = api::character::remove_contact(character().id, contact.to_string(), false).await;
                                 #[cfg(debug_assertions)]
                                 {
                                     if let Err(e) = &res {
@@ -359,9 +359,9 @@ fn ClassItems(character: Signal<types::Character>, readonly: ReadOnlySignal<bool
                         onclick: move |has| {
                             spawn(async move {
                                 let res = if has {
-                                    api::character_add_class_item(character().id, item.to_string()).await
+                                    api::character::add_class_item(character().id, item.to_string()).await
                                 } else {
-                                    api::character_remove_class_item(character().id, item.to_string()).await
+                                    api::character::remove_class_item(character().id, item.to_string()).await
                                 };
 
                                 #[cfg(debug_assertions)]

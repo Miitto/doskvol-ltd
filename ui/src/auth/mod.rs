@@ -10,7 +10,7 @@ pub fn Login(register: NavigationTarget, on_login: EventHandler) -> Element {
 
     let mut error = use_signal(|| None as Option<String>);
 
-    let mut auth: Signal<crate::Auth> = use_context();
+    let mut auth: crate::Auth = use_context();
 
     rsx! {
         div { class: "flex justify-center pt-30 w-full h-full",
@@ -20,16 +20,15 @@ pub fn Login(register: NavigationTarget, on_login: EventHandler) -> Element {
 
                 let user = api::login(username(), totp()).await;
 
-                if let Ok(user) = user {
-                    auth.set(crate::Auth::Authenticated{username: user.username});
-                    on_login.call(());
-                } else {
+                if let Err(err) = user {
                     #[cfg(debug_assertions)]
                     {
-                        let err = user.unwrap_err();
                         tracing::error!("Login error: {:?}", err);
                     }
                     error.set(Some("Invalid username or authenticator code".into()))
+                } else {
+                    auth.refresh();
+                    on_login.call(());
                 }
             },
 

@@ -14,7 +14,7 @@ pub fn Right(readonly: ReadOnlySignal<bool>, character: Signal<types::Character>
         let stash = stash();
 
         spawn(async move {
-            let res = api::character_set_coin_stash(id, coin, stash).await;
+            let res = api::character::set_coin_stash(id, coin, stash).await;
             #[cfg(debug_assertions)]
             {
                 if let Err(e) = res {
@@ -109,7 +109,7 @@ fn Xp(character: Signal<Character>, readonly: ReadOnlySignal<bool>) -> Element {
         let id = character.peek().id;
         let xp = xp();
         spawn(async move {
-            let res = api::character_set_xp(id, xp).await;
+            let res = api::character::set_xp(id, xp).await;
             #[cfg(debug_assertions)]
             {
                 if let Err(e) = res {
@@ -124,7 +124,7 @@ fn Xp(character: Signal<Character>, readonly: ReadOnlySignal<bool>) -> Element {
         let dots = dots();
 
         spawn(async move {
-            let res = api::character_set_dots(id, dots).await;
+            let res = api::character::set_dots(id, dots).await;
             #[cfg(debug_assertions)]
             {
                 if let Err(e) = res {
@@ -411,7 +411,7 @@ fn Items(character: Signal<Character>, readonly: ReadOnlySignal<bool>) -> Elemen
         let load = load();
 
         spawn(async move {
-            let res = api::character_set_load(id, load).await;
+            let res = api::character::set_load(id, load).await;
             #[cfg(debug_assertions)]
             {
                 if let Err(e) = res {
@@ -426,7 +426,7 @@ fn Items(character: Signal<Character>, readonly: ReadOnlySignal<bool>) -> Elemen
         let items = items();
 
         spawn(async move {
-            let res = api::character_set_items(id, items.bits()).await;
+            let res = api::character::set_items(id, items.bits()).await;
             #[cfg(debug_assertions)]
             {
                 if let Err(e) = res {

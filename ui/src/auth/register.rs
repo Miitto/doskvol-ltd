@@ -74,10 +74,10 @@ fn TotpSetup(
     show: ReadOnlySignal<bool>,
     on_register: EventHandler,
 ) -> Element {
-    let totp = use_memo(move || api::auth::generate_totp_secret(username()));
+    let totp = use_server_future(move || api::auth::generate_totp_secret(username()))?;
 
     let image_data = use_memo(move || {
-        if let Ok(totp) = &*totp.read() {
+        if let Some(Ok(totp)) = &*totp.read() {
             totp.get_qr_base64()
         } else {
             Err("Failed to generate QR code".into())
@@ -85,7 +85,7 @@ fn TotpSetup(
     });
 
     let secret = use_memo(move || {
-        if let Ok(totp) = &*totp.read() {
+        if let Some(Ok(totp)) = &*totp.read() {
             totp.get_secret_base32()
         } else {
             "Failed to get secret".into()
@@ -96,10 +96,10 @@ fn TotpSetup(
 
     let mut error = use_signal(|| None as Option<String>);
 
-    let mut auth: Signal<crate::Auth> = use_context();
+    let mut auth: crate::Auth = use_context();
 
     let submit = move || async move {
-        let secret = if let Ok(totp) = &*totp.read() {
+        let secret = if let Some(Ok(totp)) = &*totp.read() {
             #[cfg(not(debug_assertions))]
             {
                 if totp.check_current(&code()).unwrap_or(false) {
@@ -120,10 +120,8 @@ fn TotpSetup(
 
         tracing::info!("Registered user: {:?}", user);
 
-        if let Ok(user) = user {
-            auth.set(crate::Auth::Authenticated {
-                username: user.username,
-            });
+        if user.is_ok() {
+            auth.refresh();
             on_register.call(());
         } else {
             error.set(Some("Failed to register user".into()));

@@ -11,12 +11,11 @@ pub fn CreateCharacter(
     let mut name = use_signal(String::new);
     let mut class = use_signal(|| types::Class::Cutter);
 
-    let currentUser = use_context::<Signal<crate::Auth>>();
-    let currentUser = use_memo(move || match currentUser() {
-        crate::Auth::Authenticated { username } => username.clone(),
-        crate::Auth::Anon => {
-            panic!("CreateCharacter rendered while not authenticated");
-        }
+    let currentUser = use_context::<crate::Auth>();
+    let currentUser = use_memo(move || {
+        currentUser
+            .username()
+            .expect("User should be authenticated")
     });
 
     rsx! {
@@ -63,10 +62,19 @@ pub fn CreateCharacter(
                 }
 
                 div {
-                    class: "flex justify-end",
+                    class: "flex justify-between items-center",
+                    button {
+                        class: "bg-secondary text-secondary-foreground px-4 py-2 rounded",
+                        onclick: move |e| {
+                            e.prevent_default();
+                            open.set(false);
+                        },
+                        "Cancel"
+                    }
                     button {
                         class: "bg-primary text-primary-foreground px-4 py-2 rounded",
-                        "Create Character" }
+                        "Create Character"
+                    }
                 }
             }
         }

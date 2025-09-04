@@ -12,7 +12,9 @@ pub fn Crew<R: 'static + Clone + PartialEq + Routable>(
 ) -> Element {
     let id = crew.id;
     let mut crew_characters =
-        use_server_future(move || async move { api::get_crew_characters(id).await.unwrap() })?;
+        use_server_future(
+            move || async move { api::crew::get_crew_characters(id).await.unwrap() },
+        )?;
 
     let mut open_create_character = use_signal(|| false);
 
@@ -44,7 +46,7 @@ pub fn Crew<R: 'static + Clone + PartialEq + Routable>(
 
         CreateCharacter { crew_id: crew.id,
             on_create: move |new_character| async move {
-                let res = api::create_character(new_character).await;
+                let res = api::character::create(new_character).await;
                 if let Err(err) = res {
                     tracing::error!("Failed to create crew: {:?}", err);
                 } else {

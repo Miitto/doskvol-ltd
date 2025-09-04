@@ -246,3 +246,21 @@ impl quote::ToTokens for Contacts {
         });
     }
 }
+
+#[proc_macro_attribute]
+pub fn cfg_server(
+    attrs: proc_macro::TokenStream,
+    func: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
+    let input = syn::parse_macro_input!(attrs as syn::LitStr);
+    let endpoint = input.value();
+
+    let func = proc_macro2::TokenStream::from(func);
+
+    quote::quote! {
+        #[cfg_attr(not(feature = "desktop"), server(endpoint = #endpoint))]
+        #[cfg_attr(feature = "desktop", server(endpoint = #endpoint, client = crate::client::Client))]
+        #func
+    }
+    .into()
+}
