@@ -28,15 +28,13 @@ pub fn Center(character: Signal<types::Character>, readonly: ReadOnlySignal<bool
                 }
                 if !readonly() {
                     div { class: "inline-flex justify-end pt-2",
-                        button { class: "bg-primary text-primary-foreground w-fit rounded-lg p-2 cursor-pointer",
-                        onclick: move |_| open.set(true),
+                        button {
+                            class: "bg-primary text-primary-foreground w-fit rounded-lg p-2 cursor-pointer",
+                            onclick: move |_| open.set(true),
                             "Modify"
                         }
                     }
-                    AbilityDialog {
-                        open,
-                        character
-                    }
+                    AbilityDialog { open, character }
                 }
             }
             hr { class: "my-2" }
@@ -80,19 +78,13 @@ fn AbilityDialog(open: Signal<bool>, character: Signal<types::Character>) -> Ele
     });
 
     rsx! {
-        Dialog {
-            open,
-            close_on_click: true,
+        Dialog { open, close_on_click: true,
             div { class: "flex flex-col gap-4 w-full h-full",
                 h2 { class: "text-3xl", "Abilities" }
                 hr {}
-                div {
-                    class: "flex flex-col gap-4 max-h-full overflow-y-auto",
+                div { class: "flex flex-col gap-4 max-h-full overflow-y-auto",
                     for ability in abilities() {
-                        AbilityButton {
-                            ability,
-                            character
-                        }
+                        AbilityButton { ability, character }
                     }
                 }
                 div { class: "inline-flex justify-end",
@@ -128,10 +120,8 @@ fn AbilityButton(
                 e.stop_propagation();
                 let name = name.clone();
                 let name_a = name.clone();
-
                 let id = character().id;
                 let has = has_ability();
-
                 spawn(async move {
                     if has {
                         let res = api::character::remove_ability(id, name_a).await;
@@ -143,7 +133,6 @@ fn AbilityButton(
                         }
                     } else {
                         let res = api::character::add_ability(id, name_a).await;
-
                         #[cfg(debug_assertions)]
                         {
                             if let Err(e) = &res {
@@ -152,7 +141,6 @@ fn AbilityButton(
                         }
                     }
                 });
-
                 character
                     .with_mut(move |char| {
                         if has {
@@ -202,9 +190,13 @@ fn SlyFriends(character: Signal<types::Character>, readonly: ReadOnlySignal<bool
                                     char.contacts.friends.push(contact.to_string());
                                     char.contacts.rivals.retain(|c| c != contact);
                                 });
-
                             spawn(async move {
-                                let res = api::character::add_contact(character().id, contact.to_string(), true).await;
+                                let res = api::character::add_contact(
+                                        character().id,
+                                        contact.to_string(),
+                                        true,
+                                    )
+                                    .await;
                                 #[cfg(debug_assertions)]
                                 {
                                     if let Err(e) = &res {
@@ -217,8 +209,14 @@ fn SlyFriends(character: Signal<types::Character>, readonly: ReadOnlySignal<bool
                             character
                                 .with_mut(|char| {
                                     char.contacts.friends.retain(|c| c != contact);
-                                });spawn(async move {
-                                let res = api::character::remove_contact(character().id, contact.to_string(), true).await;
+                                });
+                            spawn(async move {
+                                let res = api::character::remove_contact(
+                                        character().id,
+                                        contact.to_string(),
+                                        true,
+                                    )
+                                    .await;
                                 #[cfg(debug_assertions)]
                                 {
                                     if let Err(e) = &res {
@@ -226,7 +224,6 @@ fn SlyFriends(character: Signal<types::Character>, readonly: ReadOnlySignal<bool
                                     }
                                 }
                             });
-
                         },
                     }
                     ContactTriangle {
@@ -238,8 +235,14 @@ fn SlyFriends(character: Signal<types::Character>, readonly: ReadOnlySignal<bool
                                 .with_mut(|char| {
                                     char.contacts.rivals.push(contact.to_string());
                                     char.contacts.friends.retain(|c| c != contact);
-                                });spawn(async move {
-                                let res = api::character::add_contact(character().id, contact.to_string(), false).await;
+                                });
+                            spawn(async move {
+                                let res = api::character::add_contact(
+                                        character().id,
+                                        contact.to_string(),
+                                        false,
+                                    )
+                                    .await;
                                 #[cfg(debug_assertions)]
                                 {
                                     if let Err(e) = &res {
@@ -247,14 +250,19 @@ fn SlyFriends(character: Signal<types::Character>, readonly: ReadOnlySignal<bool
                                     }
                                 }
                             });
-
                         },
                         remove: move || {
                             character
                                 .with_mut(|char| {
                                     char.contacts.rivals.retain(|c| c != contact);
-                                });spawn(async move {
-                                let res = api::character::remove_contact(character().id, contact.to_string(), false).await;
+                                });
+                            spawn(async move {
+                                let res = api::character::remove_contact(
+                                        character().id,
+                                        contact.to_string(),
+                                        false,
+                                    )
+                                    .await;
                                 #[cfg(debug_assertions)]
                                 {
                                     if let Err(e) = &res {
@@ -262,7 +270,6 @@ fn SlyFriends(character: Signal<types::Character>, readonly: ReadOnlySignal<bool
                                     }
                                 }
                             });
-
                         },
                     }
                     span { "{contact}" }
@@ -363,7 +370,6 @@ fn ClassItems(character: Signal<types::Character>, readonly: ReadOnlySignal<bool
                                 } else {
                                     api::character::remove_class_item(character().id, item.to_string()).await
                                 };
-
                                 #[cfg(debug_assertions)]
                                 {
                                     if let Err(e) = &res {
@@ -371,7 +377,6 @@ fn ClassItems(character: Signal<types::Character>, readonly: ReadOnlySignal<bool
                                     }
                                 }
                             });
-
                             character
                                 .with_mut(|char| {
                                     if has {

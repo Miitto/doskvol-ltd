@@ -11,16 +11,15 @@ pub fn Register(login: NavigationTarget, on_register: EventHandler) -> Element {
 
     rsx! {
         div { class: "flex flex-col gap-4 items-center pt-30 w-full h-full",
-            form { class: "flex flex-col gap-4 container h-fit p-4 border border-border rounded",
+            form {
+                class: "flex flex-col gap-4 container h-fit p-4 border border-border rounded",
                 onsubmit: move |e| async move {
                     e.prevent_default();
-
                     if username().is_empty() {
                         name_error.set(Some("Username cannot be empty".into()));
                         validated.set(false);
                         return;
                     }
-
                     if let Ok(e) = api::auth::check_username(username()).await {
                         name_error.set(e);
                         if name_error().is_none() {
@@ -38,9 +37,14 @@ pub fn Register(login: NavigationTarget, on_register: EventHandler) -> Element {
                         class: "bg-input p-2 rounded",
                         value: "{username}",
                         placeholder: "Username",
-                        oninput: move |e| {username.set(e.value()); validated.set(false);},
+                        oninput: move |e| {
+                            username.set(e.value());
+                            validated.set(false);
+                        },
                     }
-                    p { class: "text-foreground/80", "This is your unique username used to log in and is not shown to other users. A seperate display name is used per crew."}
+                    p { class: "text-foreground/80",
+                        "This is your unique username used to log in and is not shown to other users. A seperate display name is used per crew."
+                    }
                 }
 
                 if let Some(error) = name_error() {
@@ -53,11 +57,10 @@ pub fn Register(login: NavigationTarget, on_register: EventHandler) -> Element {
 
                 if !validated() {
                     div { class: "flex justify-between items-center",
-                        Link {
-                            to: login,
-                            "Back to Login"
+                        Link { to: login, "Back to Login" }
+                        button { class: "bg-primary text-primary-foreground rounded px-4 py-2 hover:bg-primary/90 transition",
+                            "Check"
                         }
-                        button { class: "bg-primary text-primary-foreground rounded px-4 py-2 hover:bg-primary/90 transition", "Check" }
                     }
                 }
             }
@@ -134,18 +137,17 @@ fn TotpSetup(
                 if let Ok(image_data) = image_data() {
                     div {
                         img {
-                            src: "data:image/png;base64,{image_data}", alt: "QR Code"
+                            src: "data:image/png;base64,{image_data}",
+                            alt: "QR Code",
                         }
                     }
                 } else {
-                    p {"Failed to generate QR code"}
+                    p { "Failed to generate QR code" }
                 }
 
                 p {
                     "Secret: "
-                    span {
-                        "{secret}"
-                    }
+                    span { "{secret}" }
                 }
 
                 form {
@@ -158,7 +160,7 @@ fn TotpSetup(
                         }
                     },
                     input {
-                        type: "text",
+                        r#type: "text",
                         class: "bg-input p-2 rounded",
                         placeholder: "Authenticator code",
                         value: "{code}",
@@ -169,9 +171,10 @@ fn TotpSetup(
                         p { class: "text-destructive", "{error}" }
                     }
 
-                    div {
-                        class: "flex justify-end w-full",
-                        button { class: "bg-primary text-primary-foreground rounded px-4 py-2 hover:bg-primary/90 transition", "Register" }
+                    div { class: "flex justify-end w-full",
+                        button { class: "bg-primary text-primary-foreground rounded px-4 py-2 hover:bg-primary/90 transition",
+                            "Register"
+                        }
                     }
                 }
             }

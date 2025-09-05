@@ -10,8 +10,7 @@ pub fn Home() -> Element {
         div { class: "flex flex-col gap-4 p-4",
             h1 { class: "text-3xl font-bold mb-4", "Crews" }
             if let Some(Ok(crews)) = crews() {
-                div {
-                    class: "flex flex-col gap-2 grow",
+                div { class: "flex flex-col gap-2 grow",
                     for crew in crews {
                         Link {
                             class: "hover:bg-input hover:text-input-foreground p-2 rounded-lg",
@@ -22,8 +21,9 @@ pub fn Home() -> Element {
                 }
             }
 
-            div {class: "flex flex-row justify-end",
-                button { class: "p-2 bg-primary text-primary-foreground rounded-lg",
+            div { class: "flex flex-row justify-end",
+                button {
+                    class: "p-2 bg-primary text-primary-foreground rounded-lg",
                     onclick: move |_| {
                         create_crew_open.set(true);
                     },
@@ -40,7 +40,7 @@ pub fn Home() -> Element {
                 } else {
                     crews.restart();
                 }
-            }
+            },
         }
     }
 }

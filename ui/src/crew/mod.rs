@@ -19,20 +19,19 @@ pub fn Crew<R: 'static + Clone + PartialEq + Routable>(
     let mut open_create_character = use_signal(|| false);
 
     rsx! {
-        div {
-            class: "flex flex-col gap-4 p-4",
-        if let Some(crew_characters) = crew_characters() {
-            div { class: "flex flex-col grow gap-2",
-                for character in crew_characters {
-                    Link {
-                        class: "hover:bg-input hover:text-input-foreground p-2 rounded-lg",
-                        to: to_character_page.call(character.id),
-                        h2 { class: "text-xl", "{character.name}" }
-                        p { class: "italic", "{character.class}" }
+        div { class: "flex flex-col gap-4 p-4",
+            if let Some(crew_characters) = crew_characters() {
+                div { class: "flex flex-col grow gap-2",
+                    for character in crew_characters {
+                        Link {
+                            class: "hover:bg-input hover:text-input-foreground p-2 rounded-lg",
+                            to: to_character_page.call(character.id),
+                            h2 { class: "text-xl", "{character.name}" }
+                            p { class: "italic", "{character.class}" }
+                        }
                     }
                 }
             }
-        }
             div { class: "flex flex-row justify-end",
                 button {
                     class: "p-2 bg-primary text-primary-foreground rounded-lg cursor-pointer",
@@ -44,7 +43,8 @@ pub fn Crew<R: 'static + Clone + PartialEq + Routable>(
             }
         }
 
-        CreateCharacter { crew_id: crew.id,
+        CreateCharacter {
+            crew_id: crew.id,
             on_create: move |new_character| async move {
                 let res = api::character::create(new_character).await;
                 if let Err(err) = res {
@@ -54,7 +54,7 @@ pub fn Crew<R: 'static + Clone + PartialEq + Routable>(
                 }
             },
 
-            open: open_create_character
+            open: open_create_character,
         }
     }
 }

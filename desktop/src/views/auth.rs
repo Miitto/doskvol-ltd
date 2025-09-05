@@ -8,8 +8,8 @@ pub fn Login() -> Element {
             register: crate::Route::Register {}.into(),
             on_login: move || {
                 nav.replace(crate::Route::Home {});
-            }
-
+            },
+        
         }
     }
 }
@@ -20,7 +20,9 @@ pub fn Register() -> Element {
     rsx! {
         ui::auth::Register {
             login: crate::Route::Login {}.into(),
-            on_register: move || {nav.replace(crate::Route::Home {});}
+            on_register: move || {
+                nav.replace(crate::Route::Home {});
+            },
         }
     }
 }

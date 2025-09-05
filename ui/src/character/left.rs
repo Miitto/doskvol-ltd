@@ -77,13 +77,17 @@ pub fn Left(readonly: ReadOnlySignal<bool>, mut character: Signal<types::Charact
         div { class: "flex flex-col gap-2 flex-auto p-4 pb-2 lg:pr-2 lg:pb-4",
             h2 { class: "block text-4xl w-max max-w-full", "{name}" }
             if !readonly() {
-                input { class: "p-1", value: "{look}", onchange: move |e| {
-                    let val = e.value();
-                    character
-                        .with_mut(|char| {
-                            char.look = types::Description::new(val);
-                        });
-                } }
+                input {
+                    class: "p-1",
+                    value: "{look}",
+                    onchange: move |e| {
+                        let val = e.value();
+                        character
+                            .with_mut(|char| {
+                                char.look = types::Description::new(val);
+                            });
+                    },
+                }
             } else {
                 Description { desc: look() }
             }
@@ -253,9 +257,7 @@ pub fn Left(readonly: ReadOnlySignal<bool>, mut character: Signal<types::Charact
                             .with_mut(|char| {
                                 char.notes = desc;
                             });
-
                         let id = character().id;
-
                         spawn(async move {
                             let res = api::character::set_description(id, notes).await;
                             #[cfg(debug_assertions)]
@@ -386,7 +388,8 @@ fn Harm(character: Signal<types::Character>, readonly: Option<bool>) -> Element 
                 input {
                     readonly,
                     class: "w-full h-full p-1 outline-hidden focus:outline-1 focus:outline-foreground focus:outline-solid focus:-outline-offset-1",
-                    value: "{harm().1[0]}",oninput: move |e| {
+                    value: "{harm().1[0]}",
+                    oninput: move |e| {
                         if readonly {
                             return;
                         }
@@ -401,7 +404,8 @@ fn Harm(character: Signal<types::Character>, readonly: Option<bool>) -> Element 
                 input {
                     readonly,
                     class: "w-full h-full p-1 outline-hidden focus:outline-1 focus:outline-foreground focus:outline-solid focus:-outline-offset-1",
-                    value: "{harm().1[1]}",oninput: move |e| {
+                    value: "{harm().1[1]}",
+                    oninput: move |e| {
                         if readonly {
                             return;
                         }
@@ -417,7 +421,8 @@ fn Harm(character: Signal<types::Character>, readonly: Option<bool>) -> Element 
                 input {
                     readonly,
                     class: "w-full h-full p-1 outline-hidden focus:outline-1 focus:outline-foreground focus:outline-solid focus:-outline-offset-1",
-                    value: "{harm().0[0]}",oninput: move |e| {
+                    value: "{harm().0[0]}",
+                    oninput: move |e| {
                         if readonly {
                             return;
                         }
@@ -432,7 +437,8 @@ fn Harm(character: Signal<types::Character>, readonly: Option<bool>) -> Element 
                 input {
                     readonly,
                     class: "w-full h-full p-1 outline-hidden focus:outline-1 focus:outline-foreground focus:outline-solid focus:-outline-offset-1",
-                    value: "{harm().0[1]}",oninput: move |e| {
+                    value: "{harm().0[1]}",
+                    oninput: move |e| {
                         if readonly {
                             return;
                         }

@@ -19,8 +19,7 @@ pub fn CreateCharacter(
     });
 
     rsx! {
-        Dialog {
-            open,
+        Dialog { open,
             form {
                 onsubmit: move |e| {
                     e.prevent_default();
@@ -31,9 +30,8 @@ pub fn CreateCharacter(
                         crew_id,
                         user_id: currentUser(),
                         name: name(),
-                        class: class()
+                        class: class(),
                     };
-
                     open.set(false);
                     on_create.call(char);
                 },
@@ -43,12 +41,14 @@ pub fn CreateCharacter(
                     placeholder: "Character Name",
                     onchange: move |e| {
                         name.set(e.value().clone());
-                    }
+                    },
                 }
                 select {
                     class: "p-2",
                     onchange: move |e| {
-                        if let Ok(c) =  std::convert::TryInto::<types::Class>::try_into(e.value().as_str()) {
+                        if let Ok(c) = std::convert::TryInto::<
+                            types::Class,
+                        >::try_into(e.value().as_str()) {
                             class.set(c);
                         }
                     },
@@ -61,8 +61,7 @@ pub fn CreateCharacter(
                     option { value: "whisper", "Whisper" }
                 }
 
-                div {
-                    class: "flex justify-between items-center",
+                div { class: "flex justify-between items-center",
                     button {
                         class: "bg-secondary text-secondary-foreground px-4 py-2 rounded",
                         onclick: move |e| {
@@ -71,8 +70,7 @@ pub fn CreateCharacter(
                         },
                         "Cancel"
                     }
-                    button {
-                        class: "bg-primary text-primary-foreground px-4 py-2 rounded",
+                    button { class: "bg-primary text-primary-foreground px-4 py-2 rounded",
                         "Create Character"
                     }
                 }

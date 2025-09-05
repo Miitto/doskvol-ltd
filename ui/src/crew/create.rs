@@ -17,8 +17,7 @@ pub fn CreateCrew(on_create: EventHandler<(api::NewCrew, String)>, open: Signal<
     });
 
     rsx! {
-        Dialog {
-            open,
+        Dialog { open,
             form {
                 class: "flex flex-col gap-4",
                 onsubmit: move |e| {
@@ -26,7 +25,7 @@ pub fn CreateCrew(on_create: EventHandler<(api::NewCrew, String)>, open: Signal<
                     let new_crew = api::NewCrew {
                         name: name(),
                         dm_id: currentUser(),
-                        specialty: specialty()
+                        specialty: specialty(),
                     };
                     if name().is_empty() {
                         return;
@@ -47,11 +46,7 @@ pub fn CreateCrew(on_create: EventHandler<(api::NewCrew, String)>, open: Signal<
                         }
                     },
                     for s in types::CrewSpecialty::ALL {
-                        option {
-                            value: "{s}",
-                            selected: s == specialty(),
-                            "{s}"
-                        }
+                        option { value: "{s}", selected: s == specialty(), "{s}" }
                     }
                 }
                 input {

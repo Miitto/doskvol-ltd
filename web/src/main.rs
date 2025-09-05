@@ -40,7 +40,7 @@ fn App() -> Element {
                             dioxus::logger::tracing::trace!("Navigation to: {:?}", state.current());
                             None
                         })
-                }
+                },
             }
         }
     }
@@ -59,10 +59,8 @@ fn DesktopNavbar() -> Element {
     let nav = use_navigator();
 
     rsx! {
-        div {
-            class: "{linux} flex flex-col",
-            div {
-                class: "border-b border-border",
+        div { class: "{linux} flex flex-col",
+            div { class: "border-b border-border",
                 button {
                     class: "hover:underline w-fit p-2 rounded-lg",
                     onclick: move |_| {
