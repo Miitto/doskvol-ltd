@@ -301,10 +301,10 @@ pub async fn create_invite(
 }
 
 #[data::cfg_server("crew/join")]
-pub async fn join(code: String, name: String) -> Result<types::Crew, ServerFnError> {
+pub async fn join(code: String, name: String) -> Result<types::Crew, ServerFnError<String>> {
     let user = crate::auth::session::get_current_user()
         .await
-        .ok_or_else(|| ServerFnError::<NoCustomError>::Request("Not authenticated".to_string()))?;
+        .ok_or_else(|| ServerFnError::<String>::Request("Not authenticated".to_string()))?;
     let mut conn = db::connect();
 
     let invite: db::models::CrewInvite = crew_invites::table
@@ -313,11 +313,19 @@ pub async fn join(code: String, name: String) -> Result<types::Crew, ServerFnErr
         .first(&mut conn)
         .map_err(|e| {
             tracing::error!("Failed to find crew invite: {e}");
-            ServerFnError::<NoCustomError>::Request("Invalid invite code".to_string())
+            ServerFnError::WrappedServerError("Invalid invite code".to_string())
+        })?;
+
+    diesel::delete(db::schema::crew_invites::table)
+        .filter(crew_invites::used.ge(crew_invites::max_uses))
+        .execute(&mut conn)
+        .map_err(|e| {
+            tracing::error!("Failed to delete expired invites: {e}");
+            ServerFnError::<String>::ServerError("Failed to join crew".to_string())
         })?;
 
     if invite.used >= invite.max_uses {
-        return Err(ServerFnError::<NoCustomError>::Request(
+        return Err(ServerFnError::<String>::WrappedServerError(
             "Invite code has reached its maximum uses".to_string(),
         ));
     }
@@ -331,7 +339,7 @@ pub async fn join(code: String, name: String) -> Result<types::Crew, ServerFnErr
         .execute(&mut conn)
         .map_err(|e| {
             tracing::error!("Failed to insert new crew member: {e}");
-            ServerFnError::<NoCustomError>::ServerError("Failed to join crew".to_string())
+            ServerFnError::<String>::ServerError("Failed to join crew".to_string())
         })?;
 
     diesel::update(crew_invites::table.filter(crew_invites::code.eq(&code)))
@@ -339,7 +347,7 @@ pub async fn join(code: String, name: String) -> Result<types::Crew, ServerFnErr
         .execute(&mut conn)
         .map_err(|e| {
             tracing::error!("Failed to update crew invite usage: {e}");
-            ServerFnError::<NoCustomError>::ServerError("Failed to join crew".to_string())
+            ServerFnError::<String>::ServerError("Failed to join crew".to_string())
         })?;
 
     let crew: db::models::Crew = crews::table
@@ -348,7 +356,7 @@ pub async fn join(code: String, name: String) -> Result<types::Crew, ServerFnErr
         .first(&mut conn)
         .map_err(|e| {
             tracing::error!("Failed to find crew for invite: {e}");
-            ServerFnError::<NoCustomError>::ServerError("Corrupt invite data".to_string())
+            ServerFnError::<String>::ServerError("Corrupt invite data".to_string())
         })?;
 
     Ok(types::Crew {

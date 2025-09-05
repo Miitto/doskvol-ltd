@@ -17,9 +17,9 @@ pub fn CreateCrew(on_create: EventHandler<(api::NewCrew, String)>, open: Signal<
     });
 
     rsx! {
-        Dialog { open,
+        Dialog { open, close_on_click: true,
             form {
-                class: "flex flex-col gap-4",
+                class: "flex flex-col gap-4 w-[min(90vw,_70rem)]",
                 onsubmit: move |e| {
                     e.prevent_default();
                     let new_crew = api::NewCrew {
@@ -33,8 +33,10 @@ pub fn CreateCrew(on_create: EventHandler<(api::NewCrew, String)>, open: Signal<
                     on_create.call((new_crew, dm_name()));
                     open.set(false);
                 },
+                h2 { class: "text-2xl font-bold", "Create Crew" }
                 input {
                     class: "border p-2 rounded w-full bg-input text-input-foreground",
+                    placeholder: "Crew Name",
                     value: name,
                     onchange: move |e| name.set(e.value().clone()),
                 }
@@ -57,14 +59,14 @@ pub fn CreateCrew(on_create: EventHandler<(api::NewCrew, String)>, open: Signal<
                 }
                 div { class: "flex flex-row justify-end gap-4",
                     button {
-                        class: "p-2 bg-secondary text-secondary-foreground rounded-lg",
+                        class: "p-2 bg-secondary text-secondary-foreground rounded-lg cursor-pointer",
                         onclick: move |_| {
                             open.set(false);
                         },
                         "Cancel"
                     }
                     button {
-                        class: "p-2 bg-primary text-primary-foreground rounded-lg",
+                        class: "p-2 bg-primary text-primary-foreground rounded-lg cursor-pointer",
                         r#type: "submit",
                         "Create Crew"
                     }

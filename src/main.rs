@@ -84,7 +84,11 @@ fn Navbar() -> Element {
                             nav.push(Route::Login {});
                         }
                     },
-                    if auth.is_authenticated() { "Logout" } else { "Login" }
+                    if auth.is_authenticated() {
+                        "Logout"
+                    } else {
+                        "Login"
+                    }
                 }
             }
             Tailwind {}

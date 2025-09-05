@@ -1,5 +1,7 @@
 use dioxus::prelude::*;
 
+use crate::elements::ErrorMessage;
+
 #[component]
 pub fn JoinCrew(code: ReadOnlySignal<String>) -> Element {
     #[allow(clippy::redundant_closure)]
@@ -18,26 +20,23 @@ pub fn JoinCrew(code: ReadOnlySignal<String>) -> Element {
                 class: "flex flex-col gap-4",
                 onsubmit: move |e| async move {
                     e.prevent_default();
-
                     let code = code();
                     let name = name();
-
                     if code.is_empty() {
+                        error.set(Some("Join code cannot be empty".into()));
                         return;
                     }
-
                     if name.is_empty() {
                         error.set(Some("Name cannot be empty".into()));
                         return;
                     }
-
-                        let res = api::crew::join(code, name).await;
-                        match res {
-                            Ok(crew) => {
-                                nav.push(crate::Route::Crew { id: crew.id });
-                            }
-                            Err(err) => {
-                                error.set(Some(format!("Failed to join crew: {}", err)));
+                    let res = api::crew::join(code, name).await;
+                    match res {
+                        Ok(crew) => {
+                            nav.push(crate::Route::Crew { id: crew.id });
+                        }
+                        Err(err) => {
+                            error.set(Some(err.to_string()));
                         }
                     }
                 },
@@ -60,10 +59,12 @@ pub fn JoinCrew(code: ReadOnlySignal<String>) -> Element {
                     },
                 }
 
-                div {
-                    class: "flex flex-row justify-end items-center",
-                    button {
-                        class: "bg-primary text-primary-foreground rounded-lg py-2 px-4 cursor-pointer",
+                if let Some(err) = error.as_ref() {
+                    ErrorMessage { class: "ml-1", "{err}" }
+                }
+
+                div { class: "flex flex-row justify-end items-center",
+                    button { class: "bg-primary text-primary-foreground rounded-lg py-2 px-4 cursor-pointer",
                         "Join"
                     }
                 }

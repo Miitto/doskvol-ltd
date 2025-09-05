@@ -35,7 +35,9 @@ pub fn Home() -> Element {
 
                 Link {
                     class: "bg-primary text-primary-foreground rounded-lg p-2",
-                    to: crate::Route::JoinCrew {code: "".into()},
+                    to: crate::Route::JoinCrew {
+                        code: "".into(),
+                    },
                     "Join a Crew"
                 }
             }

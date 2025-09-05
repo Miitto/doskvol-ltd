@@ -30,7 +30,7 @@
   }
 
   select {
-    @apply bg-input text-foreground border border-border rounded-lg px-2 py-1;
+    @apply bg-input text-foreground border border-border rounded-lg p-2;
   }
 
   .linux select {

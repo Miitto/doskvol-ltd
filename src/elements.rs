@@ -71,18 +71,39 @@ pub fn DescriptionEdit(
 }
 
 #[component]
-pub fn Dialog(open: Signal<bool>, children: Element, close_on_click: Option<bool>) -> Element {
-    let close_on_click = close_on_click.unwrap_or(false);
+pub fn Dialog(
+    open: Signal<bool>,
+    children: Element,
+    close_on_click: ReadOnlySignal<Option<bool>>,
+) -> Element {
+    let close_on_click = use_memo(move || close_on_click().unwrap_or(false));
+
+    let display = if open() { "flex" } else { "hidden" };
+
     rsx! {
         dialog {
-            class: "bg-background text-foreground p-4 rounded-lg shadow-lg border border-border z-10 fixed top-4 left-4 right-4 bottom-4 overflow-hidden w-[calc(100%_-_2rem)] h-[calc(100%_-_2rem)]",
+            open,
+            class: "bg-transparent fixed top-0 left-0 w-screen h-screen {display} flex-col justify-center items-center z-10 backdrop-blur",
             onclick: move |_| {
-                if close_on_click {
+                if close_on_click() {
                     open.set(false);
                 }
             },
-            open: open(),
-            {children}
+            div {
+                class: "bg-background w-max h-max max-w-[calc(100vw_-_2rem)] max-h-[calc(100vh_-_2rem)] text-foreground p-4 rounded-lg shadow-lg border border-border",
+                onclick: move |e| {
+                    e.stop_propagation();
+                },
+                {children}
+            }
         }
+    }
+}
+
+#[component]
+pub fn ErrorMessage(children: Element, class: ReadOnlySignal<Option<String>>) -> Element {
+    let class = use_memo(move || class().unwrap_or_default());
+    rsx! {
+        p { class: "text-destructive brightness-200 {class}", {children} }
     }
 }

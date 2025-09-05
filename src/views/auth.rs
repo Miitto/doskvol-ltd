@@ -9,7 +9,6 @@ pub fn Login() -> Element {
             on_login: move || {
                 nav.replace(crate::Route::Home {});
             },
-
         }
     }
 }

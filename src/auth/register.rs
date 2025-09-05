@@ -1,5 +1,7 @@
 use dioxus::prelude::*;
 
+use crate::elements::ErrorMessage;
+
 #[component]
 pub fn Register(login: NavigationTarget, on_register: EventHandler) -> Element {
     let mut username = use_signal(String::default);
@@ -48,11 +50,11 @@ pub fn Register(login: NavigationTarget, on_register: EventHandler) -> Element {
                 }
 
                 if let Some(error) = name_error() {
-                    p { class: "text-destructive brightness-150", "{error}" }
+                    ErrorMessage { "{error}" }
                 }
 
                 if let Some(error) = other_error() {
-                    p { class: "text-destructive brightness-150", "{error}" }
+                    ErrorMessage { "{error}" }
                 }
 
                 if !validated() {
@@ -168,7 +170,7 @@ fn TotpSetup(
                     }
 
                     if let Some(error) = error() {
-                        p { class: "text-destructive", "{error}" }
+                        ErrorMessage { "{error}" }
                     }
 
                     div { class: "flex justify-end w-full",

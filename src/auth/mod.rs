@@ -3,6 +3,8 @@ use dioxus::prelude::*;
 mod register;
 pub use register::*;
 
+use crate::elements::ErrorMessage;
+
 #[component]
 pub fn Login(register: NavigationTarget, on_login: EventHandler) -> Element {
     let mut username = use_signal(String::default);
@@ -48,7 +50,7 @@ pub fn Login(register: NavigationTarget, on_login: EventHandler) -> Element {
                 }
 
                 if let Some(error) = error() {
-                    p { class: "text-destructive", "{error}" }
+                    ErrorMessage { "{error}" }
                 }
 
                 div { class: "flex justify-between items-center",
