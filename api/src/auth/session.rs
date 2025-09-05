@@ -3,40 +3,56 @@ use dioxus::prelude::*;
 pub const SESSION_COOKIE_NAME: &str = "session_token";
 
 #[cfg(feature = "server")]
-pub async fn get_current_user() -> Option<crate::db::models::User> {
-    use axum_extra::extract::cookie::CookieJar;
-    use diesel::prelude::*;
+#[async_trait::async_trait]
+impl FromServerContext for crate::User {
+    type Rejection = ServerFnError<server_fn::error::NoCustomError>;
 
-    let headers: http::HeaderMap = extract().await.ok()?;
+    async fn from_request(req: &DioxusServerContext) -> Result<Self, Self::Rejection> {
+        use axum_extra::extract::cookie::CookieJar;
+        use diesel::prelude::*;
 
-    let jar = CookieJar::from_headers(&headers);
+        let headers = &req.request_parts().headers;
 
-    let auth = jar.get(SESSION_COOKIE_NAME)?;
+        let jar = CookieJar::from_headers(headers);
 
-    if auth.value().is_empty() || auth.value() == "deleted" {
-        tracing::debug!("Empty session cookie");
-        return None;
+        let auth = jar.get(SESSION_COOKIE_NAME).ok_or_else(|| {
+            ServerFnError::<server_fn::error::NoCustomError>::Request("Not authenticated".into())
+        })?;
+
+        if auth.value().is_empty() || auth.value() == "deleted" {
+            tracing::debug!("Empty session cookie");
+            return Err(ServerFnError::<server_fn::error::NoCustomError>::Request(
+                "Not authenticated".into(),
+            ));
+        }
+
+        let mut conn = crate::db::connect();
+
+        let session: crate::db::models::Session = if let Ok(s) = crate::db::schema::sessions::table
+            .filter(crate::db::schema::sessions::token.eq(auth.value()))
+            .select(crate::db::models::Session::as_select())
+            .first(&mut conn)
+        {
+            s
+        } else {
+            tracing::info!("Invalid session token: {}", auth.value());
+            return Err(ServerFnError::<server_fn::error::NoCustomError>::Request(
+                "Not authenticated".into(),
+            ));
+        };
+
+        crate::db::schema::users::table
+            .find(session.user_id)
+            .select(crate::db::models::User::as_select())
+            .first(&mut conn)
+            .inspect(|i| tracing::info!("Authenticated user: {}", i.username))
+            .inspect_err(|e| tracing::error!("Failed to load user: {e}"))
+            .map_err(|_| {
+                ServerFnError::<server_fn::error::NoCustomError>::Request(
+                    "Not authenticated".into(),
+                )
+            })
     }
-
-    let mut conn = crate::db::connect();
-
-    let session: crate::db::models::Session = if let Ok(s) = crate::db::schema::sessions::table
-        .filter(crate::db::schema::sessions::token.eq(auth.value()))
-        .select(crate::db::models::Session::as_select())
-        .first(&mut conn)
-    {
-        s
-    } else {
-        tracing::info!("Invalid session token: {}", auth.value());
-        return None;
-    };
-
-    crate::db::schema::users::table
-        .find(session.user_id)
-        .select(crate::db::models::User::as_select())
-        .first(&mut conn)
-        .ok()
-        .inspect(|i| tracing::info!("Authenticated user: {}", i.username))
 }
 
 #[cfg(feature = "server")]

@@ -12,10 +12,10 @@ use left::Left;
 use right::Right;
 
 #[component]
-pub fn Character(character: types::Character, readonly: Option<bool>) -> Element {
+pub fn Character(character: types::Character, readonly: ReadOnlySignal<Option<bool>>) -> Element {
     let character = use_signal(|| character);
 
-    let readonly = use_memo(move || readonly.unwrap_or(true));
+    let readonly = use_memo(move || readonly().unwrap_or(true));
 
     rsx! {
         div { class: "flex flex-col lg:flex-row h-full",

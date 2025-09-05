@@ -325,8 +325,15 @@ fn Triangle(flip: bool, fill: bool, onclick: EventHandler, readonly: Option<bool
     } else {
         "hover:text-foreground/50"
     };
+
+    let cursor = if readonly {
+        "cursor-not-allowed"
+    } else {
+        "cursor-pointer"
+    };
+
     rsx! {
-        button { class: "{fill} {hover}", onclick: move |_| onclick.call(()),
+        button { class: "{fill} {hover} {cursor}", onclick: move |_| onclick.call(()),
             svg { class: "w-4 h-4 {flip}", view_box: "0 0 100 100",
                 polygon {
                     points: "50,0 0,100 100,100",

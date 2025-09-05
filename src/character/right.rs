@@ -9,6 +9,9 @@ pub fn Right(readonly: ReadOnlySignal<bool>, character: Signal<types::Character>
     let stash = use_memo(move || character().stash);
 
     use_effect(move || {
+        if readonly() {
+            return;
+        }
         let id = character.peek().id;
         let coin = coin();
         let stash = stash();
@@ -106,6 +109,9 @@ fn Xp(character: Signal<Character>, readonly: ReadOnlySignal<bool>) -> Element {
     let dots = use_memo(move || character().dots);
 
     use_effect(move || {
+        if readonly() {
+            return;
+        }
         let id = character.peek().id;
         let xp = xp();
         spawn(async move {
@@ -120,6 +126,9 @@ fn Xp(character: Signal<Character>, readonly: ReadOnlySignal<bool>) -> Element {
     });
 
     use_effect(move || {
+        if readonly() {
+            return;
+        }
         let id = character.peek().id;
         let dots = dots();
 
@@ -390,6 +399,7 @@ fn DotLine(readonly: ReadOnlySignal<bool>, params: DotBlockParams) -> Element {
     rsx! {
         for i in 2..=4 {
             CountBtn {
+                readonly: readonly(),
                 class: "rounded-full",
                 this: i,
                 total: params.current,
@@ -407,6 +417,9 @@ fn Items(character: Signal<Character>, readonly: ReadOnlySignal<bool>) -> Elemen
     let items = use_memo(move || character().items);
 
     use_effect(move || {
+        if readonly() {
+            return;
+        }
         let id = character.peek().id;
         let load = load();
 
@@ -422,6 +435,9 @@ fn Items(character: Signal<Character>, readonly: ReadOnlySignal<bool>) -> Elemen
     });
 
     use_effect(move || {
+        if readonly() {
+            return;
+        }
         let id = character.peek().id;
         let items = items();
 

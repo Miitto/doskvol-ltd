@@ -12,9 +12,7 @@ use crate::db::schema::*;
 
 #[data::cfg_server("character/get")]
 pub async fn get(id: types::CharacterId) -> Result<types::Character, ServerFnError> {
-    let user = crate::auth::session::get_current_user()
-        .await
-        .ok_or_else(|| ServerFnError::<NoCustomError>::Request("Not authenticated".to_string()))?;
+    let user: crate::User = extract().await?;
 
     let mut conn = db::connect();
 
@@ -124,9 +122,7 @@ pub async fn get(id: types::CharacterId) -> Result<types::Character, ServerFnErr
 pub async fn create(
     character: db::models::NewCharacter,
 ) -> Result<types::Character, ServerFnError> {
-    let user = crate::auth::session::get_current_user()
-        .await
-        .ok_or_else(|| ServerFnError::<NoCustomError>::Request("Not authenticated".to_string()))?;
+    let user: crate::User = extract().await?;
 
     if !crate::crew::is_in_crew(character.crew_id, &user.username) {
         return Err(ServerFnError::<NoCustomError>::Request(

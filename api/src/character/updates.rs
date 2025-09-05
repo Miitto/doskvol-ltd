@@ -25,10 +25,7 @@ pub async fn set_traits(
     vice: types::Vice,
 ) -> Result<(), ServerFnError> {
     use db::schema::characters::dsl;
-
-    let user = crate::auth::session::get_current_user()
-        .await
-        .ok_or_else(|| ServerFnError::<NoCustomError>::Request("Not authenticated".to_string()))?;
+    let user: crate::User = extract().await?;
 
     if !is_own_character(id, &user.username) {
         return Err(ServerFnError::<NoCustomError>::Request(
@@ -55,9 +52,7 @@ pub async fn set_traits(
 
 #[data::cfg_server("character/set_look")]
 pub async fn set_look(id: types::CharacterId, look: String) -> Result<(), ServerFnError> {
-    let user = crate::auth::session::get_current_user()
-        .await
-        .ok_or_else(|| ServerFnError::<NoCustomError>::Request("Not authenticated".to_string()))?;
+    let user: crate::User = extract().await?;
 
     if !is_own_character(id, &user.username) {
         return Err(ServerFnError::<NoCustomError>::Request(
@@ -87,9 +82,7 @@ pub async fn set_stress_truama_healing_armor(
     healing: u8,
     armor: u8,
 ) -> Result<(), ServerFnError> {
-    let user = crate::auth::session::get_current_user()
-        .await
-        .ok_or_else(|| ServerFnError::<NoCustomError>::Request("Not authenticated".to_string()))?;
+    let user: crate::User = extract().await?;
 
     if !is_own_character(id, &user.username) {
         return Err(ServerFnError::<NoCustomError>::Request(
@@ -118,9 +111,7 @@ pub async fn set_stress_truama_healing_armor(
 
 #[data::cfg_server("character/set_harm")]
 pub async fn set_harm(id: types::CharacterId, harm: types::Harm) -> Result<(), ServerFnError> {
-    let user = crate::auth::session::get_current_user()
-        .await
-        .ok_or_else(|| ServerFnError::<NoCustomError>::Request("Not authenticated".to_string()))?;
+    let user: crate::User = extract().await?;
 
     if !is_own_character(id, &user.username) {
         return Err(ServerFnError::<NoCustomError>::Request(
@@ -150,9 +141,7 @@ pub async fn set_harm(id: types::CharacterId, harm: types::Harm) -> Result<(), S
 
 #[data::cfg_server("character/set_description")]
 pub async fn set_description(id: types::CharacterId, notes: String) -> Result<(), ServerFnError> {
-    let user = crate::auth::session::get_current_user()
-        .await
-        .ok_or_else(|| ServerFnError::<NoCustomError>::Request("Not authenticated".to_string()))?;
+    let user: crate::User = extract().await?;
 
     if !is_own_character(id, &user.username) {
         return Err(ServerFnError::<NoCustomError>::Request(
@@ -179,9 +168,7 @@ pub async fn add_ability(
     character_id: types::CharacterId,
     name: String,
 ) -> Result<(), ServerFnError> {
-    let user = crate::auth::session::get_current_user()
-        .await
-        .ok_or_else(|| ServerFnError::<NoCustomError>::Request("Not authenticated".to_string()))?;
+    let user: crate::User = extract().await?;
 
     if !is_own_character(character_id, &user.username) {
         return Err(ServerFnError::<NoCustomError>::Request(
@@ -210,9 +197,7 @@ pub async fn remove_ability(
     character_id: types::CharacterId,
     name: String,
 ) -> Result<(), ServerFnError> {
-    let user = crate::auth::session::get_current_user()
-        .await
-        .ok_or_else(|| ServerFnError::<NoCustomError>::Request("Not authenticated".to_string()))?;
+    let user: crate::User = extract().await?;
 
     if !is_own_character(character_id, &user.username) {
         return Err(ServerFnError::<NoCustomError>::Request(
@@ -243,9 +228,7 @@ pub async fn add_contact(
     name: String,
     friend: bool,
 ) -> Result<(), ServerFnError> {
-    let user = crate::auth::session::get_current_user()
-        .await
-        .ok_or_else(|| ServerFnError::<NoCustomError>::Request("Not authenticated".to_string()))?;
+    let user: crate::User = extract().await?;
 
     if !is_own_character(character_id, &user.username) {
         return Err(ServerFnError::<NoCustomError>::Request(
@@ -279,9 +262,7 @@ pub async fn remove_contact(
     name: String,
     friend: bool,
 ) -> Result<(), ServerFnError> {
-    let user = crate::auth::session::get_current_user()
-        .await
-        .ok_or_else(|| ServerFnError::<NoCustomError>::Request("Not authenticated".to_string()))?;
+    let user: crate::User = extract().await?;
 
     if !is_own_character(character_id, &user.username) {
         return Err(ServerFnError::<NoCustomError>::Request(
@@ -312,9 +293,7 @@ pub async fn add_class_item(
     character_id: types::CharacterId,
     name: String,
 ) -> Result<(), ServerFnError> {
-    let user = crate::auth::session::get_current_user()
-        .await
-        .ok_or_else(|| ServerFnError::<NoCustomError>::Request("Not authenticated".to_string()))?;
+    let user: crate::User = extract().await?;
 
     if !is_own_character(character_id, &user.username) {
         return Err(ServerFnError::<NoCustomError>::Request(
@@ -343,9 +322,7 @@ pub async fn remove_class_item(
     character_id: types::CharacterId,
     name: String,
 ) -> Result<(), ServerFnError> {
-    let user = crate::auth::session::get_current_user()
-        .await
-        .ok_or_else(|| ServerFnError::<NoCustomError>::Request("Not authenticated".to_string()))?;
+    let user: crate::User = extract().await?;
 
     if !is_own_character(character_id, &user.username) {
         return Err(ServerFnError::<NoCustomError>::Request(
@@ -376,9 +353,7 @@ pub async fn set_coin_stash(
     coin: u8,
     stash: u8,
 ) -> Result<(), ServerFnError> {
-    let user = crate::auth::session::get_current_user()
-        .await
-        .ok_or_else(|| ServerFnError::<NoCustomError>::Request("Not authenticated".to_string()))?;
+    let user: crate::User = extract().await?;
 
     if !is_own_character(character_id, &user.username) {
         return Err(ServerFnError::<NoCustomError>::Request(
@@ -402,9 +377,7 @@ pub async fn set_coin_stash(
 
 #[data::cfg_server("character/set_xp")]
 pub async fn set_xp(character_id: types::CharacterId, xp: types::XP) -> Result<(), ServerFnError> {
-    let user = crate::auth::session::get_current_user()
-        .await
-        .ok_or_else(|| ServerFnError::<NoCustomError>::Request("Not authenticated".to_string()))?;
+    let user: crate::User = extract().await?;
 
     if !is_own_character(character_id, &user.username) {
         return Err(ServerFnError::<NoCustomError>::Request(
@@ -436,9 +409,7 @@ pub async fn set_dots(
     character_id: types::CharacterId,
     dots: types::Dots,
 ) -> Result<(), ServerFnError> {
-    let user = crate::auth::session::get_current_user()
-        .await
-        .ok_or_else(|| ServerFnError::<NoCustomError>::Request("Not authenticated".to_string()))?;
+    let user: crate::User = extract().await?;
 
     if !is_own_character(character_id, &user.username) {
         return Err(ServerFnError::<NoCustomError>::Request(
@@ -478,9 +449,7 @@ pub async fn set_load(
     character_id: types::CharacterId,
     load: Option<types::Load>,
 ) -> Result<(), ServerFnError> {
-    let user = crate::auth::session::get_current_user()
-        .await
-        .ok_or_else(|| ServerFnError::<NoCustomError>::Request("Not authenticated".to_string()))?;
+    let user: crate::User = extract().await?;
 
     if !is_own_character(character_id, &user.username) {
         return Err(ServerFnError::<NoCustomError>::Request(
@@ -510,9 +479,7 @@ pub async fn set_load(
 
 #[data::cfg_server("character/set_items")]
 pub async fn set_items(character_id: types::CharacterId, items: u16) -> Result<(), ServerFnError> {
-    let user = crate::auth::session::get_current_user()
-        .await
-        .ok_or_else(|| ServerFnError::<NoCustomError>::Request("Not authenticated".to_string()))?;
+    let user: crate::User = extract().await?;
 
     if !is_own_character(character_id, &user.username) {
         return Err(ServerFnError::<NoCustomError>::Request(

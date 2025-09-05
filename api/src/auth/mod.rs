@@ -26,13 +26,11 @@ pub async fn generate_totp_secret(name: String) -> Result<TOTP, ServerFnError> {
 
 #[data::cfg_server("auth/current_user")]
 pub async fn get_current_user() -> Result<Option<types::User>, ServerFnError> {
-    if let Some(user) = session::get_current_user().await {
-        Ok(Some(types::User {
-            username: user.username,
-        }))
-    } else {
-        Ok(None)
-    }
+    let user: Option<types::User> = extract().await.ok().map(|u: crate::User| types::User {
+        username: u.username,
+    });
+
+    Ok(user)
 }
 
 #[data::cfg_server("auth/login")]

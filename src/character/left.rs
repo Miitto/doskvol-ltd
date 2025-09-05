@@ -21,6 +21,10 @@ pub fn Left(readonly: ReadOnlySignal<bool>, mut character: Signal<types::Charact
     let armor = use_memo(move || character().armor);
 
     use_effect(move || {
+        if readonly() {
+            return;
+        }
+
         let heritage = heritage();
         let background = background();
         let vice = vice();
@@ -38,6 +42,9 @@ pub fn Left(readonly: ReadOnlySignal<bool>, mut character: Signal<types::Charact
     });
 
     use_effect(move || {
+        if readonly() {
+            return;
+        }
         let id = character.peek().id;
         let look = look();
 
@@ -53,6 +60,9 @@ pub fn Left(readonly: ReadOnlySignal<bool>, mut character: Signal<types::Charact
     });
 
     use_effect(move || {
+        if readonly() {
+            return;
+        }
         let id = character.peek().id;
         let stress = stress();
         let trauma = trauma().bits();
@@ -346,11 +356,13 @@ fn Trauma(
 }
 
 #[component]
-fn Harm(character: Signal<types::Character>, readonly: Option<bool>) -> Element {
-    let readonly = readonly.unwrap_or(true);
+fn Harm(character: Signal<types::Character>, readonly: ReadOnlySignal<bool>) -> Element {
     let harm = use_memo(move || character().harm);
 
     use_effect(move || {
+        if readonly() {
+            return;
+        }
         let id = character.peek().id;
         let harm = harm();
 
@@ -373,7 +385,7 @@ fn Harm(character: Signal<types::Character>, readonly: Option<bool>) -> Element 
                     class: "w-full h-full p-1 outline-hidden focus:outline-1 focus:outline-foreground focus:outline-solid focus:-outline-offset-1",
                     value: harm().2,
                     oninput: move |e| {
-                        if readonly {
+                        if readonly() {
                             return;
                         }
                         let val = e.value();
@@ -390,7 +402,7 @@ fn Harm(character: Signal<types::Character>, readonly: Option<bool>) -> Element 
                     class: "w-full h-full p-1 outline-hidden focus:outline-1 focus:outline-foreground focus:outline-solid focus:-outline-offset-1",
                     value: "{harm().1[0]}",
                     oninput: move |e| {
-                        if readonly {
+                        if readonly() {
                             return;
                         }
                         let val = e.value();
@@ -406,7 +418,7 @@ fn Harm(character: Signal<types::Character>, readonly: Option<bool>) -> Element 
                     class: "w-full h-full p-1 outline-hidden focus:outline-1 focus:outline-foreground focus:outline-solid focus:-outline-offset-1",
                     value: "{harm().1[1]}",
                     oninput: move |e| {
-                        if readonly {
+                        if readonly() {
                             return;
                         }
                         let val = e.value();
@@ -423,7 +435,7 @@ fn Harm(character: Signal<types::Character>, readonly: Option<bool>) -> Element 
                     class: "w-full h-full p-1 outline-hidden focus:outline-1 focus:outline-foreground focus:outline-solid focus:-outline-offset-1",
                     value: "{harm().0[0]}",
                     oninput: move |e| {
-                        if readonly {
+                        if readonly() {
                             return;
                         }
                         let val = e.value();
@@ -439,7 +451,7 @@ fn Harm(character: Signal<types::Character>, readonly: Option<bool>) -> Element 
                     class: "w-full h-full p-1 outline-hidden focus:outline-1 focus:outline-foreground focus:outline-solid focus:-outline-offset-1",
                     value: "{harm().0[1]}",
                     oninput: move |e| {
-                        if readonly {
+                        if readonly() {
                             return;
                         }
                         let val = e.value();

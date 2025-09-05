@@ -72,6 +72,17 @@ fn Navbar() -> Element {
                     },
                     "Back"
                 }
+                div {
+                    class: "flex flex-row gap-2",
+
+                if let Some(username) = auth.username() {
+                    Link {
+                        to: "",
+                        class: "hover:underline w-fit p-2",
+                        "{username}"
+                    }
+                }
+
                 button {
                     class: "hover:underline w-fit p-2 rounded-lg cursor-pointer",
                     onclick: move |_| async move {
@@ -89,6 +100,7 @@ fn Navbar() -> Element {
                     } else {
                         "Login"
                     }
+                }
                 }
             }
             Tailwind {}
