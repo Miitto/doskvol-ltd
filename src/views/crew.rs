@@ -6,7 +6,7 @@ pub fn Crew(id: types::CrewId) -> Element {
 
     rsx! {
         if let Some(crew) = crew() {
-            ui::Crew {
+            crate::crew::Crew {
                 crew,
                 to_character_page: move |character_id| crate::Route::Character {
                     id: character_id,

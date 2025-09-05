@@ -1,9 +1,14 @@
+[package]
+authors = ["Miitto <wpbickerton@gmail.com>"]
+edition = "2021"
+name = "doskvol-ltd"
+version = "0.1.0"
+
 [workspace]
-resolver = "2"
-members = ["ui", "web", "desktop", "mobile", "api", "data", "types"]
+members = ["api", "data", "types"]
 
 [workspace.dependencies]
-dioxus = { version = "0.6.0" }
+dioxus = "0.6.3"
 serde = { version = "1.0", features = ["derive"] }
 tracing = "0.1.41"
 diesel = { version = "2.2.0", features = ["sqlite"] }
@@ -11,10 +16,21 @@ libsqlite3-sys = { version = ">=0.8.0, <0.13.0", features = ["bundled"] }
 totp-rs = { version = "5.7.0", features = ["qr", "serde_support"] }
 
 # workspace
-ui = { path = "ui" }
 api = { path = "api" }
 data = { path = "data" }
 types = { path = "types" }
+
+[dependencies]
+dioxus = { workspace = true, features = ["router"] }
+api.workspace = true
+types.workspace = true
+tracing.workspace = true
+
+[features]
+desktop = ["dioxus/desktop", "api/desktop"]
+server = ["dioxus/server", "api/server"]
+web = ["dioxus/web"]
+mobile = ["dioxus/mobile"]
 
 [profile]
 

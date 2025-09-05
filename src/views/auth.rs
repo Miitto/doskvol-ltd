@@ -4,12 +4,12 @@ use dioxus::prelude::*;
 pub fn Login() -> Element {
     let nav = use_navigator();
     rsx! {
-        ui::auth::Login {
+        crate::auth::Login {
             register: crate::Route::Register {}.into(),
             on_login: move || {
                 nav.replace(crate::Route::Home {});
             },
-        
+
         }
     }
 }
@@ -18,7 +18,7 @@ pub fn Login() -> Element {
 pub fn Register() -> Element {
     let nav = use_navigator();
     rsx! {
-        ui::auth::Register {
+        crate::auth::Register {
             login: crate::Route::Login {}.into(),
             on_register: move || {
                 nav.replace(crate::Route::Home {});

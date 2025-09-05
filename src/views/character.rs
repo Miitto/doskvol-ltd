@@ -7,7 +7,7 @@ pub fn Character(id: types::CharacterId) -> Element {
 
     rsx! {
         if let Some(character) = character() {
-            ui::Character { character, readonly: false }
+            crate::character::Character { character, readonly: false }
         } else {
             p { "No character found." }
         }
