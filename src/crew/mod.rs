@@ -26,8 +26,15 @@ pub fn Crew<R: 'static + Clone + PartialEq + Routable>(
                         Link {
                             class: "hover:bg-input hover:text-input-foreground p-2 rounded-lg",
                             to: to_character_page.call(character.id),
-                            h2 { class: "text-xl", "{character.name}" }
-                            p { class: "italic", "{character.class}" }
+                            div {
+                                class: "flex flex-row justify-between items-center gap-2",
+                                div {
+                                    h2 { class: "text-xl", "{character.name}" }
+                                    p { class: "italic", "{character.class}" }
+                                }
+
+                                p { class: "italic", "{character.player_name}" }
+                            }
                         }
                     }
                 }

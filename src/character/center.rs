@@ -22,7 +22,7 @@ pub fn Center(character: Signal<types::Character>, readonly: ReadOnlySignal<bool
     rsx! {
         div { class: "flex flex-col gap-2 flex-auto p-4 pb-2 pt-2 lg:pr-2 lg:pb-4 lg:pt-4 lg:pl-2",
             h1 { class: "text-6xl", "{class}" }
-            div { class: "flex flex-col",
+            div { class: "flex flex-col gap-4",
                 for ability in abilities() {
                     Ability { ability: ability.clone() }
                 }

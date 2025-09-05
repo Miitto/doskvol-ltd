@@ -48,12 +48,25 @@ pub async fn get_crew_characters(
 
     Ok(members
         .into_iter()
-        .map(|m| types::CharacterPreview {
-            id: m.id,
-            name: m.name,
-            class: m.class,
-            player_id: m.user_id,
-            crew_id,
+        .map(|m| {
+            let player_name = db::schema::crew_members::table
+                .filter(
+                    db::schema::crew_members::crew_id
+                        .eq(crew_id)
+                        .and(db::schema::crew_members::user_id.eq(&m.user_id)),
+                )
+                .select(db::schema::crew_members::display_name)
+                .first::<String>(&mut conn)
+                .unwrap_or_else(|_| "Failed to load player name".to_string());
+
+            types::CharacterPreview {
+                id: m.id,
+                name: m.name,
+                class: m.class,
+                player_id: m.user_id,
+                player_name,
+                crew_id,
+            }
         })
         .collect())
 }

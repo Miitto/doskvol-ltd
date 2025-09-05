@@ -140,3 +140,15 @@ pub async fn check_username(username: String) -> Result<Option<String>, ServerFn
         Ok(None)
     }
 }
+
+#[data::cfg_server("auth/logout")]
+pub async fn logout() -> Result<(), ServerFnError> {
+    if let Err(()) = session::clear_current_user().await {
+        tracing::error!("Failed to clear session on logout");
+        return Err(ServerFnError::<NoCustomError>::ServerError(
+            "Failed to clear session".to_string(),
+        ));
+    }
+
+    Ok(())
+}

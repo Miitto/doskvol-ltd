@@ -1,13 +1,13 @@
 use dioxus::prelude::*;
 
-use views::{Character, Crew, Home, Login, Register};
+use views::{Character, Crew, Home, JoinCrew, Login, Register};
 
 mod views;
 
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]
 enum Route {
-    #[layout(DesktopNavbar)]
+    #[layout(Navbar)]
     #[layout(AuthManager)]
         #[route("/login")]
         Login {},
@@ -16,6 +16,8 @@ enum Route {
         #[layout(AuthRequired)]
             #[route("/")]
             Home {},
+            #[route("/crew/join?:code")]
+            JoinCrew {code: String},
             #[route("/crew/:id")]
             Crew { id: types::CrewId },
             #[route("/character/:id")]
@@ -49,7 +51,7 @@ fn App() -> Element {
 /// A desktop-specific Router around the shared `Navbar` component
 /// which allows us to use the desktop-specific `Route` enum.
 #[component]
-fn DesktopNavbar() -> Element {
+fn Navbar() -> Element {
     let linux = if cfg!(target_os = "linux") {
         "linux"
     } else {
@@ -58,15 +60,31 @@ fn DesktopNavbar() -> Element {
 
     let nav = use_navigator();
 
+    let mut auth: Auth = use_context();
+
     rsx! {
         div { class: "{linux} flex flex-col",
-            div { class: "border-b border-border",
+            div { class: "border-b border-border flex flex-row justify-between items-center",
                 button {
-                    class: "hover:underline w-fit p-2 rounded-lg",
+                    class: "hover:underline w-fit p-2 rounded-lg cursor-pointer",
                     onclick: move |_| {
                         nav.go_back();
                     },
                     "Back"
+                }
+                button {
+                    class: "hover:underline w-fit p-2 rounded-lg cursor-pointer",
+                    onclick: move |_| async move {
+                        if auth.is_authenticated() {
+                            if let Err(e) = api::auth::logout().await {
+                                tracing::error!("Failed to log out: {e}");
+                            }
+                            auth.refresh();
+                        } else {
+                            nav.push(Route::Login {});
+                        }
+                    },
+                    if auth.is_authenticated() { "Logout" } else { "Login" }
                 }
             }
             Tailwind {}

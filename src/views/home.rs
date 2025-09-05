@@ -15,19 +15,28 @@ pub fn Home() -> Element {
                         Link {
                             class: "hover:bg-input hover:text-input-foreground p-2 rounded-lg",
                             to: crate::Route::Crew { id: crew.id },
-                            "{crew.name}"
+                            div { class: "flex flex-row justify-between items-center",
+                                "{crew.name}"
+                                span { class: "italic", "{crew.dm_name}" }
+                            }
                         }
                     }
                 }
             }
 
-            div { class: "flex flex-row justify-end",
+            div { class: "flex flex-row justify-between",
                 button {
-                    class: "p-2 bg-primary text-primary-foreground rounded-lg",
+                    class: "p-2 bg-secondary text-secondary-foreground rounded-lg",
                     onclick: move |_| {
                         create_crew_open.set(true);
                     },
                     "Create New Crew"
+                }
+
+                Link {
+                    class: "bg-primary text-primary-foreground rounded-lg p-2",
+                    to: crate::Route::JoinCrew {code: "".into()},
+                    "Join a Crew"
                 }
             }
         }

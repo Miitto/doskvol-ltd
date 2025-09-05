@@ -12,6 +12,7 @@ use crate::{Class, Description};
 pub struct CharacterPreview {
     pub id: crate::CharacterId,
     pub player_id: crate::UserId,
+    pub player_name: String,
     pub crew_id: crate::CrewId,
     pub name: String,
     pub class: Class,

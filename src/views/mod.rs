@@ -9,3 +9,6 @@ pub use crew::Crew;
 
 mod auth;
 pub use auth::{Login, Register};
+
+mod join_crew;
+pub use join_crew::JoinCrew;

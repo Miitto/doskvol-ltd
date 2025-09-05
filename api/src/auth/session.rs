@@ -13,6 +13,11 @@ pub async fn get_current_user() -> Option<crate::db::models::User> {
 
     let auth = jar.get(SESSION_COOKIE_NAME)?;
 
+    if auth.value().is_empty() || auth.value() == "deleted" {
+        tracing::debug!("Empty session cookie");
+        return None;
+    }
+
     let mut conn = crate::db::connect();
 
     let session: crate::db::models::Session = if let Ok(s) = crate::db::schema::sessions::table
@@ -61,9 +66,9 @@ pub async fn set_current_user(user: &types::UserId) -> Result<(), ()> {
 
     let cookie = Cookie::build((SESSION_COOKIE_NAME, new_session.token))
         .path("/")
-        // .secure(true)
-        // .http_only(true)
-        // .same_site(cookie::SameSite::Strict)
+        .secure(true)
+        .http_only(true)
+        .same_site(cookie::SameSite::Strict)
         .permanent()
         .build();
 
@@ -74,6 +79,53 @@ pub async fn set_current_user(user: &types::UserId) -> Result<(), ()> {
             .append(SET_COOKIE, header_value);
     } else {
         tracing::error!("Failed to set session cookie for user {}", user);
+    }
+
+    Ok(())
+}
+
+#[cfg(feature = "server")]
+pub async fn clear_current_user() -> Result<(), ()> {
+    use axum_extra::extract::cookie::CookieJar;
+    use diesel::prelude::*;
+    let mut conn = crate::db::connect();
+
+    let headers: http::HeaderMap = extract()
+        .await
+        .map_err(|e| tracing::error!("Failed to get header map when removing session: {e}"))?;
+
+    let jar = CookieJar::from_headers(&headers);
+
+    let auth = jar.get(SESSION_COOKIE_NAME).ok_or_else(|| {
+        tracing::info!("No session cookie found when removing session");
+    })?;
+
+    diesel::delete(
+        crate::db::schema::sessions::table
+            .filter(crate::db::schema::sessions::token.eq(auth.value())),
+    )
+    .execute(&mut conn)
+    .map_err(|e| {
+        tracing::error!("Failed to delete session: {e}");
+    })?;
+
+    let context = server_context();
+
+    let cookie = cookie::Cookie::build(SESSION_COOKIE_NAME)
+        .path("/")
+        .secure(true)
+        .http_only(true)
+        .same_site(cookie::SameSite::Strict)
+        .removal()
+        .build();
+
+    if let Ok(header_value) = cookie.encoded().to_string().parse() {
+        context
+            .response_parts_mut()
+            .headers
+            .append(http::header::SET_COOKIE, header_value);
+    } else {
+        tracing::error!("Failed to remove session cookie");
     }
 
     Ok(())
