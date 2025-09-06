@@ -31,6 +31,7 @@ desktop = ["dioxus/desktop", "api/desktop"]
 server = ["dioxus/server", "api/server"]
 web = ["dioxus/web"]
 mobile = ["dioxus/mobile"]
+debug = ["api/debug"]
 
 [profile]
 

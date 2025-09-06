@@ -7,14 +7,13 @@ use crate::{character::CreateCharacter, elements::Dialog};
 
 #[component]
 pub fn Crew<R: 'static + Clone + PartialEq + Routable>(
-    crew: types::Crew,
+    crew: ReadOnlySignal<types::Crew>,
     to_character_page: Callback<types::CrewId, R>,
 ) -> Element {
-    let id = crew.id;
-    let mut crew_characters =
-        use_server_future(
-            move || async move { api::crew::get_crew_characters(id).await.unwrap() },
-        )?;
+    let mut crew_characters = use_server_future(move || {
+        let id = crew().id;
+        async move { api::crew::get_crew_characters(id).await.unwrap_or_default() }
+    })?;
 
     let mut open_create_character = use_signal(|| false);
 
@@ -22,10 +21,14 @@ pub fn Crew<R: 'static + Clone + PartialEq + Routable>(
 
     let auth: crate::Auth = use_context();
 
-    let is_dm = use_memo(move || auth.username().is_some_and(|u| u == crew.dm_id));
+    let is_dm = use_memo(move || auth.username().is_some_and(|u| u == crew().dm_id));
 
     rsx! {
         div { class: "flex flex-col gap-4 p-4",
+            div { class: "flex flex-row justify-between items-center",
+            h1 { class: "text-3xl font-bold mb-4", "{crew().name}" }
+            p { class: "italic", "{crew().specialty}" }
+            }
 
             if is_dm() {
                 div { class: "flex flex-row gap-4 items-center",
@@ -69,7 +72,7 @@ pub fn Crew<R: 'static + Clone + PartialEq + Routable>(
         }
 
         CreateCharacter {
-            crew_id: crew.id,
+            crew_id: crew().id,
             on_create: move |new_character| async move {
                 let res = api::character::create(new_character).await;
                 if let Err(err) = res {
@@ -82,7 +85,9 @@ pub fn Crew<R: 'static + Clone + PartialEq + Routable>(
             open: open_create_character,
         }
 
-        InvitesDialog { open: show_invites, crew_id: crew.id }
+        if is_dm() {
+            InvitesDialog { open: show_invites, crew_id: crew().id }
+        }
     }
 }
 

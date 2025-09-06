@@ -14,6 +14,8 @@ impl<T: std::fmt::Display> server_fn::client::Client<T> for Client {
     async fn send(mut req: Self::Request) -> Result<Self::Response, ServerFnError<T>> {
         use std::{collections::HashMap, io::Write as _};
 
+        tracing::debug!("Desktop client sending request to {}", req.url());
+
         let home_dir = std::env::home_dir().ok_or_else(|| {
             tracing::error!("Failed to get home dir");
             ServerFnError::Request("Could not determine home directory".into())

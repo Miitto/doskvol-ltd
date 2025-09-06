@@ -28,6 +28,12 @@ enum Route {
 }
 
 fn main() {
+    #[cfg(all(not(feature = "server"), not(debug_assertions), not(feature = "debug")))]
+    {
+        tracing::info!("Setting production server URL");
+        server_fn::client::set_server_url("https://blades.miitto.dev");
+    }
+
     dioxus::launch(App);
 }
 
@@ -72,39 +78,44 @@ fn Navbar() -> Element {
                     },
                     "Back"
                 }
-                div {
-                    class: "flex flex-row gap-2",
+                div { class: "flex flex-row gap-2",
 
-                if let Some(username) = auth.username() {
-                    Link {
-                        to: "",
-                        class: "hover:underline w-fit p-2",
-                        "{username}"
+                    if let Some(username) = auth.username() {
+                        Link { to: "", class: "hover:underline w-fit p-2", "{username}" }
                     }
-                }
 
-                button {
-                    class: "hover:underline w-fit p-2 rounded-lg cursor-pointer",
-                    onclick: move |_| async move {
-                        if auth.is_authenticated() {
-                            if let Err(e) = api::auth::logout().await {
-                                tracing::error!("Failed to log out: {e}");
+                    button {
+                        class: "hover:underline w-fit p-2 rounded-lg cursor-pointer",
+                        onclick: move |_| async move {
+                            if auth.is_authenticated() {
+                                if let Err(e) = api::auth::logout().await {
+                                    tracing::error!("Failed to log out: {e}");
+                                }
+                                auth.refresh();
+                            } else {
+                                nav.push(Route::Login {});
                             }
-                            auth.refresh();
+                        },
+                        if auth.is_authenticated() {
+                            "Logout"
                         } else {
-                            nav.push(Route::Login {});
+                            "Login"
                         }
-                    },
-                    if auth.is_authenticated() {
-                        "Logout"
-                    } else {
-                        "Login"
                     }
-                }
                 }
             }
             Tailwind {}
+            DarkreaderLock {}
             Outlet::<Route> {}
+        }
+    }
+}
+
+#[component]
+fn DarkreaderLock() -> Element {
+    rsx! {
+        document::Meta {
+            name: "darkreader-lock",
         }
     }
 }

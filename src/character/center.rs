@@ -124,18 +124,18 @@ fn AbilityButton(
                 let has = has_ability();
                 spawn(async move {
                     if has {
-                        let res = api::character::remove_ability(id, name_a).await;
+                        let _res = api::character::remove_ability(id, name_a).await;
                         #[cfg(debug_assertions)]
                         {
-                            if let Err(e) = &res {
+                            if let Err(e) = &_res {
                                 tracing::error!("Failed to remove ability: {e}");
                             }
                         }
                     } else {
-                        let res = api::character::add_ability(id, name_a).await;
+                        let _res = api::character::add_ability(id, name_a).await;
                         #[cfg(debug_assertions)]
                         {
-                            if let Err(e) = &res {
+                            if let Err(e) = &_res {
                                 tracing::error!("Failed to add ability: {e}");
                             }
                         }
@@ -191,7 +191,7 @@ fn SlyFriends(character: Signal<types::Character>, readonly: ReadOnlySignal<bool
                                     char.contacts.rivals.retain(|c| c != contact);
                                 });
                             spawn(async move {
-                                let res = api::character::add_contact(
+                                let _res = api::character::add_contact(
                                         character().id,
                                         contact.to_string(),
                                         true,
@@ -199,7 +199,7 @@ fn SlyFriends(character: Signal<types::Character>, readonly: ReadOnlySignal<bool
                                     .await;
                                 #[cfg(debug_assertions)]
                                 {
-                                    if let Err(e) = &res {
+                                    if let Err(e) = &_res {
                                         tracing::error!("Failed to add contact: {e}");
                                     }
                                 }
@@ -211,7 +211,7 @@ fn SlyFriends(character: Signal<types::Character>, readonly: ReadOnlySignal<bool
                                     char.contacts.friends.retain(|c| c != contact);
                                 });
                             spawn(async move {
-                                let res = api::character::remove_contact(
+                                let _res = api::character::remove_contact(
                                         character().id,
                                         contact.to_string(),
                                         true,
@@ -219,7 +219,7 @@ fn SlyFriends(character: Signal<types::Character>, readonly: ReadOnlySignal<bool
                                     .await;
                                 #[cfg(debug_assertions)]
                                 {
-                                    if let Err(e) = &res {
+                                    if let Err(e) = &_res {
                                         tracing::error!("Failed to add contact: {e}");
                                     }
                                 }
@@ -237,7 +237,7 @@ fn SlyFriends(character: Signal<types::Character>, readonly: ReadOnlySignal<bool
                                     char.contacts.friends.retain(|c| c != contact);
                                 });
                             spawn(async move {
-                                let res = api::character::add_contact(
+                                let _res = api::character::add_contact(
                                         character().id,
                                         contact.to_string(),
                                         false,
@@ -245,7 +245,7 @@ fn SlyFriends(character: Signal<types::Character>, readonly: ReadOnlySignal<bool
                                     .await;
                                 #[cfg(debug_assertions)]
                                 {
-                                    if let Err(e) = &res {
+                                    if let Err(e) = &_res {
                                         tracing::error!("Failed to add contact: {e}");
                                     }
                                 }
@@ -257,7 +257,7 @@ fn SlyFriends(character: Signal<types::Character>, readonly: ReadOnlySignal<bool
                                     char.contacts.rivals.retain(|c| c != contact);
                                 });
                             spawn(async move {
-                                let res = api::character::remove_contact(
+                                let _res = api::character::remove_contact(
                                         character().id,
                                         contact.to_string(),
                                         false,
@@ -265,7 +265,7 @@ fn SlyFriends(character: Signal<types::Character>, readonly: ReadOnlySignal<bool
                                     .await;
                                 #[cfg(debug_assertions)]
                                 {
-                                    if let Err(e) = &res {
+                                    if let Err(e) = &_res {
                                         tracing::error!("Failed to add contact: {e}");
                                     }
                                 }
@@ -333,7 +333,9 @@ fn Triangle(flip: bool, fill: bool, onclick: EventHandler, readonly: Option<bool
     };
 
     rsx! {
-        button { class: "{fill} {hover} {cursor}", onclick: move |_| onclick.call(()),
+        button {
+            class: "{fill} {hover} {cursor}",
+            onclick: move |_| onclick.call(()),
             svg { class: "w-4 h-4 {flip}", view_box: "0 0 100 100",
                 polygon {
                     points: "50,0 0,100 100,100",
@@ -372,14 +374,14 @@ fn ClassItems(character: Signal<types::Character>, readonly: ReadOnlySignal<bool
                         checked: character().class_items.contains(&item.to_string()),
                         onclick: move |has| {
                             spawn(async move {
-                                let res = if has {
+                                let _res = if has {
                                     api::character::add_class_item(character().id, item.to_string()).await
                                 } else {
                                     api::character::remove_class_item(character().id, item.to_string()).await
                                 };
                                 #[cfg(debug_assertions)]
                                 {
-                                    if let Err(e) = &res {
+                                    if let Err(e) = &_res {
                                         tracing::error!("Failed to modify class item: {e}");
                                     }
                                 }

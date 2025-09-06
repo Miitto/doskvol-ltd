@@ -20,8 +20,11 @@ pub fn Left(readonly: ReadOnlySignal<bool>, mut character: Signal<types::Charact
     let healing = use_memo(move || character().healing);
     let armor = use_memo(move || character().armor);
 
+    let mut first_load = use_signal(|| true);
+
     use_effect(move || {
         if readonly() {
+            tracing::debug!("Skipping effect because readonly");
             return;
         }
 
@@ -30,15 +33,19 @@ pub fn Left(readonly: ReadOnlySignal<bool>, mut character: Signal<types::Charact
         let vice = vice();
         let id = character.peek().id;
 
-        spawn(async move {
-            let res = api::character::set_traits(id, heritage, background, vice).await;
-            #[cfg(debug_assertions)]
-            {
-                if let Err(err) = res {
-                    tracing::error!("Failed to set character traits: {:?}", err);
+        if !*first_load.peek() {
+            spawn(async move {
+                let _res = api::character::set_traits(id, heritage, background, vice).await;
+                #[cfg(debug_assertions)]
+                {
+                    if let Err(err) = _res {
+                        tracing::error!("Failed to set character traits: {:?}", err);
+                    }
                 }
-            }
-        });
+            });
+        } else {
+            tracing::debug!("Skipping effect because first load");
+        }
     });
 
     use_effect(move || {
@@ -48,15 +55,17 @@ pub fn Left(readonly: ReadOnlySignal<bool>, mut character: Signal<types::Charact
         let id = character.peek().id;
         let look = look();
 
-        spawn(async move {
-            let res = api::character::set_look(id, look.to_string()).await;
-            #[cfg(debug_assertions)]
-            {
-                if let Err(err) = res {
-                    tracing::error!("Failed to set character look: {:?}", err);
+        if !*first_load.peek() {
+            spawn(async move {
+                let _res = api::character::set_look(id, look.to_string()).await;
+                #[cfg(debug_assertions)]
+                {
+                    if let Err(err) = _res {
+                        tracing::error!("Failed to set character look: {:?}", err);
+                    }
                 }
-            }
-        });
+            });
+        }
     });
 
     use_effect(move || {
@@ -69,18 +78,25 @@ pub fn Left(readonly: ReadOnlySignal<bool>, mut character: Signal<types::Charact
         let healing = healing();
         let armor = armor().bits();
 
-        spawn(async move {
-            let res =
-                api::character::set_stress_truama_healing_armor(id, stress, trauma, healing, armor)
-                    .await;
+        if !*first_load.peek() {
+            spawn(async move {
+                let _res = api::character::set_stress_truama_healing_armor(
+                    id, stress, trauma, healing, armor,
+                )
+                .await;
 
-            if let Err(err) = res {
-                tracing::error!(
-                    "Failed to set character stress/trauma/healing/armor: {:?}",
-                    err
-                );
-            }
-        });
+                if let Err(err) = _res {
+                    tracing::error!(
+                        "Failed to set character stress/trauma/healing/armor: {:?}",
+                        err
+                    );
+                }
+            });
+        }
+    });
+
+    use_effect(move || {
+        first_load.set(false);
     });
 
     rsx! {
@@ -269,10 +285,10 @@ pub fn Left(readonly: ReadOnlySignal<bool>, mut character: Signal<types::Charact
                             });
                         let id = character().id;
                         spawn(async move {
-                            let res = api::character::set_description(id, notes).await;
+                            let _res = api::character::set_description(id, notes).await;
                             #[cfg(debug_assertions)]
                             {
-                                if let Err(err) = res {
+                                if let Err(err) = _res {
                                     tracing::error!("Failed to set character description: {:?}", err);
                                 }
                             }
@@ -334,9 +350,15 @@ fn Trauma(
         "hover:bg-input/40"
     };
 
+    let cursor = if readonly.unwrap_or(true) {
+        "cursor-not-allowed"
+    } else {
+        "cursor-pointer"
+    };
+
     rsx! {
         button {
-            class: "cursor-pointer rounded-lg px-2 py-1 {bg_color} {hover}",
+            class: "{cursor} rounded-lg px-2 py-1 {bg_color} {hover}",
             onclick: move |_| {
                 if readonly.unwrap_or(true) {
                     return;
@@ -358,6 +380,7 @@ fn Trauma(
 #[component]
 fn Harm(character: Signal<types::Character>, readonly: ReadOnlySignal<bool>) -> Element {
     let harm = use_memo(move || character().harm);
+    let mut first_load = use_signal(|| true);
 
     use_effect(move || {
         if readonly() {
@@ -366,15 +389,21 @@ fn Harm(character: Signal<types::Character>, readonly: ReadOnlySignal<bool>) -> 
         let id = character.peek().id;
         let harm = harm();
 
-        spawn(async move {
-            let res = api::character::set_harm(id, harm).await;
-            #[cfg(debug_assertions)]
-            {
-                if let Err(err) = res {
-                    tracing::error!("Failed to set character harm: {:?}", err);
+        if !*first_load.peek() {
+            spawn(async move {
+                let _res = api::character::set_harm(id, harm).await;
+                #[cfg(debug_assertions)]
+                {
+                    if let Err(err) = _res {
+                        tracing::error!("Failed to set character harm: {:?}", err);
+                    }
                 }
-            }
-        });
+            });
+        }
+    });
+
+    use_effect(move || {
+        first_load.set(false);
     });
 
     rsx! {
@@ -399,7 +428,7 @@ fn Harm(character: Signal<types::Character>, readonly: ReadOnlySignal<bool>) -> 
             HarmLine { num: 2, state: "-1D",
                 input {
                     readonly,
-                    class: "w-full h-full p-1 outline-hidden focus:outline-1 focus:outline-foreground focus:outline-solid focus:-outline-offset-1",
+                    class: "w-full h-full p-1 outline-hidden focus:outline-1 focus:outline-foreground focus:outline-solid focus:-outline-offset-1 border-r border-border",
                     value: "{harm().1[0]}",
                     oninput: move |e| {
                         if readonly() {
@@ -412,7 +441,6 @@ fn Harm(character: Signal<types::Character>, readonly: ReadOnlySignal<bool>) -> 
                             });
                     },
                 }
-                div { class: "bg-border w-px h-full" }
                 input {
                     readonly,
                     class: "w-full h-full p-1 outline-hidden focus:outline-1 focus:outline-foreground focus:outline-solid focus:-outline-offset-1",
@@ -432,7 +460,7 @@ fn Harm(character: Signal<types::Character>, readonly: ReadOnlySignal<bool>) -> 
             HarmLine { num: 1, state: "Less Effect",
                 input {
                     readonly,
-                    class: "w-full h-full p-1 outline-hidden focus:outline-1 focus:outline-foreground focus:outline-solid focus:-outline-offset-1",
+                    class: "w-full h-full p-1 outline-hidden focus:outline-1 focus:outline-foreground focus:outline-solid focus:-outline-offset-1 border-r border-border",
                     value: "{harm().0[0]}",
                     oninput: move |e| {
                         if readonly() {
@@ -445,7 +473,6 @@ fn Harm(character: Signal<types::Character>, readonly: ReadOnlySignal<bool>) -> 
                             });
                     },
                 }
-                div { class: "bg-border w-px h-full" }
                 input {
                     readonly,
                     class: "w-full h-full p-1 outline-hidden focus:outline-1 focus:outline-foreground focus:outline-solid focus:-outline-offset-1",

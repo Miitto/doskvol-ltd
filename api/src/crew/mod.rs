@@ -100,7 +100,10 @@ pub async fn get_crew(id: types::CrewId) -> Result<types::Crew, ServerFnError> {
 
 #[data::cfg_server("crew/my_crews")]
 pub async fn get_my_crews() -> Result<Vec<types::CrewPreview>, ServerFnError> {
+    tracing::info!("Loading crews for current user");
+    tracing::trace!("Test trace");
     let user: crate::User = extract().await?;
+    tracing::info!("Current user: {}", user.username);
 
     let mut conn = db::connect();
 
@@ -114,7 +117,7 @@ pub async fn get_my_crews() -> Result<Vec<types::CrewPreview>, ServerFnError> {
             ServerFnError::<NoCustomError>::ServerError("Failed to load crews".to_string())
         })?;
 
-    let crews = crews
+    let crews: Vec<types::CrewPreview> = crews
         .into_iter()
         .map(|c| {
             let dm_name = crew_members::table
@@ -143,6 +146,8 @@ pub async fn get_my_crews() -> Result<Vec<types::CrewPreview>, ServerFnError> {
             }
         })
         .collect();
+
+    tracing::info!("Loaded {} crews for user {}", crews.len(), user.username);
 
     Ok(crews)
 }

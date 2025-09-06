@@ -10,3 +10,5 @@ pub mod character;
 pub mod crew;
 
 pub mod client;
+
+pub(crate) use auth::session::Auth;

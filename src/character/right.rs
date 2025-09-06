@@ -8,6 +8,8 @@ pub fn Right(readonly: ReadOnlySignal<bool>, character: Signal<types::Character>
     let coin = use_memo(move || character().coin);
     let stash = use_memo(move || character().stash);
 
+    let mut first_load = use_signal(|| true);
+
     use_effect(move || {
         if readonly() {
             return;
@@ -16,20 +18,26 @@ pub fn Right(readonly: ReadOnlySignal<bool>, character: Signal<types::Character>
         let coin = coin();
         let stash = stash();
 
-        spawn(async move {
-            let res = api::character::set_coin_stash(id, coin, stash).await;
-            #[cfg(debug_assertions)]
-            {
-                if let Err(e) = res {
-                    tracing::error!("Failed to set coin/stash: {e}");
+        if !*first_load.peek() {
+            spawn(async move {
+                let _res = api::character::set_coin_stash(id, coin, stash).await;
+                #[cfg(debug_assertions)]
+                {
+                    if let Err(e) = _res {
+                        tracing::error!("Failed to set coin/stash: {e}");
+                    }
                 }
-            }
-        });
+            });
+        }
+    });
+
+    use_effect(move || {
+        first_load.set(false);
     });
 
     rsx! {
-        div { class: "flex flex-col flex-auto lg:max-w-fit shrink p-4 pt-2 lg:pl-2 lg:pt-4",
-            div { class: "flex flex-row gap-2 h-32 ",
+        div { class: "flex flex-col flex-auto lg:max-w-fit shrink p-4 gap-4 pt-2 lg:pl-2 lg:pt-4",
+            div { class: "flex flex-row gap-2",
                 div { class: "flex flex-col w-fit h-fit",
                     span { "Stash " }
                     span { "Coin" }
@@ -57,7 +65,7 @@ pub fn Right(readonly: ReadOnlySignal<bool>, character: Signal<types::Character>
             }
 
             Xp { character, readonly }
-            br {}
+
             Items { character, readonly }
         }
     }
@@ -108,17 +116,23 @@ fn Xp(character: Signal<Character>, readonly: ReadOnlySignal<bool>) -> Element {
     let xp = use_memo(move || character().xp);
     let dots = use_memo(move || character().dots);
 
+    let mut first_load = use_signal(|| true);
+
     use_effect(move || {
         if readonly() {
             return;
         }
         let id = character.peek().id;
         let xp = xp();
+
+        if *first_load.peek() {
+            return;
+        }
         spawn(async move {
-            let res = api::character::set_xp(id, xp).await;
+            let _res = api::character::set_xp(id, xp).await;
             #[cfg(debug_assertions)]
             {
-                if let Err(e) = res {
+                if let Err(e) = _res {
                     tracing::error!("Failed to set xp: {e}");
                 }
             }
@@ -131,19 +145,27 @@ fn Xp(character: Signal<Character>, readonly: ReadOnlySignal<bool>) -> Element {
         }
         let id = character.peek().id;
         let dots = dots();
-
+        if *first_load.peek() {
+            return;
+        }
         spawn(async move {
-            let res = api::character::set_dots(id, dots).await;
+            let _res = api::character::set_dots(id, dots).await;
             #[cfg(debug_assertions)]
             {
-                if let Err(e) = res {
+                if let Err(e) = _res {
                     tracing::error!("Failed to set dots: {e}");
                 }
             }
         });
     });
 
+    use_effect(move || {
+        first_load.set(false);
+    });
+
     rsx! {
+        div {
+            class: "flex flex-col",
         XpLine {
             name: "Playbook",
             readonly,
@@ -157,7 +179,7 @@ fn Xp(character: Signal<Character>, readonly: ReadOnlySignal<bool>) -> Element {
             },
         }
 
-        div { class: "flex flex-row lg:flex-col gap-4 justify-between flex-wrap lg:flex-no-wrap lg:justify-start pt-4",
+        div { class: "flex flex-row lg:flex-col gap-2 justify-between flex-wrap lg:flex-no-wrap lg:justify-start pt-2",
             div { class: "flex flex-col",
 
                 XpLine {
@@ -305,6 +327,7 @@ fn Xp(character: Signal<Character>, readonly: ReadOnlySignal<bool>) -> Element {
             }
         }
     }
+    }
 }
 
 #[component]
@@ -384,7 +407,7 @@ fn DotBlock(readonly: ReadOnlySignal<bool>, params: DotBlockParamList) -> Elemen
                     set: params.3.set,
                 }
             }
-            div { class: "grid grid-cols-subgrid grid-rows-subgrid row-span-4 col-span-5 pl-1 gap-1 items-center",
+            div { class: "grid grid-cols-subgrid grid-rows-subgrid row-span-4 col-span-5 pl-1 gap-x-1 items-center",
                 DotLine { readonly, params: params.0 }
                 DotLine { readonly, params: params.1 }
                 DotLine { readonly, params: params.2 }
@@ -407,7 +430,7 @@ fn DotLine(readonly: ReadOnlySignal<bool>, params: DotBlockParams) -> Element {
             }
         }
         div {}
-        span { class: "font-bold", "{params.name}" }
+        span { class: "h-fit font-bold", "{params.name}" }
     }
 }
 
@@ -416,6 +439,8 @@ fn Items(character: Signal<Character>, readonly: ReadOnlySignal<bool>) -> Elemen
     let load = use_memo(move || character().load);
     let items = use_memo(move || character().items);
 
+    let mut first_load = use_signal(|| true);
+
     use_effect(move || {
         if readonly() {
             return;
@@ -423,11 +448,14 @@ fn Items(character: Signal<Character>, readonly: ReadOnlySignal<bool>) -> Elemen
         let id = character.peek().id;
         let load = load();
 
+        if *first_load.peek() {
+            return;
+        }
         spawn(async move {
-            let res = api::character::set_load(id, load).await;
+            let _res = api::character::set_load(id, load).await;
             #[cfg(debug_assertions)]
             {
-                if let Err(e) = res {
+                if let Err(e) = _res {
                     tracing::error!("Failed to set load: {e}");
                 }
             }
@@ -440,19 +468,26 @@ fn Items(character: Signal<Character>, readonly: ReadOnlySignal<bool>) -> Elemen
         }
         let id = character.peek().id;
         let items = items();
-
+        if *first_load.peek() {
+            return;
+        }
         spawn(async move {
-            let res = api::character::set_items(id, items.bits()).await;
+            let _res = api::character::set_items(id, items.bits()).await;
             #[cfg(debug_assertions)]
             {
-                if let Err(e) = res {
+                if let Err(e) = _res {
                     tracing::error!("Failed to set items: {e}");
                 }
             }
         });
     });
 
+    use_effect(move || {
+        first_load.set(false);
+    });
+
     rsx! {
+        div { class: "flex flex-col",
         div { class: "flex flex-row gap-2 items-center lg:justify-between mb-4",
             ItemChecked {
                 checked: load().is_some_and(|load| matches!(load, types::Load::Light)),
@@ -615,6 +650,7 @@ fn Items(character: Signal<Character>, readonly: ReadOnlySignal<bool>) -> Elemen
             readonly,
             "Lantern"
         }
+    }
     }
 }
 

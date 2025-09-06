@@ -3,7 +3,7 @@ use dioxus::prelude::*;
 use crate::elements::Dialog;
 
 #[component]
-pub fn CreateCrew(on_create: EventHandler<(api::NewCrew, String)>, open: Signal<bool>) -> Element {
+pub fn CreateCrew(on_create: EventHandler, open: Signal<bool>) -> Element {
     let mut name = use_signal(|| "".to_string());
     let mut specialty = use_signal(|| types::CrewSpecialty::Assassins);
 
@@ -20,7 +20,7 @@ pub fn CreateCrew(on_create: EventHandler<(api::NewCrew, String)>, open: Signal<
         Dialog { open, close_on_click: true,
             form {
                 class: "flex flex-col gap-4 w-[min(90vw,_70rem)]",
-                onsubmit: move |e| {
+                onsubmit: move |e| async move {
                     e.prevent_default();
                     let new_crew = api::NewCrew {
                         name: name(),
@@ -30,8 +30,15 @@ pub fn CreateCrew(on_create: EventHandler<(api::NewCrew, String)>, open: Signal<
                     if name().is_empty() {
                         return;
                     }
-                    on_create.call((new_crew, dm_name()));
-                    open.set(false);
+                    match api::crew::create_crew(new_crew, dm_name()).await {
+                        Ok(_) => {
+                            on_create.call(());
+                            open.set(false);
+                        },
+                        Err(err) => {
+                            tracing::error!("Failed to create crew: {:?}", err);
+                        }
+                    }
                 },
                 h2 { class: "text-2xl font-bold", "Create Crew" }
                 input {

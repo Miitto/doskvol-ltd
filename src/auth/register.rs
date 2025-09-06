@@ -97,86 +97,74 @@ fn TotpSetup(
         }
     });
 
+    let show_class = use_memo(move || if show() { "flex" } else { "hidden" });
+
     let mut code = use_signal(String::default);
 
     let mut error = use_signal(|| None as Option<String>);
 
     let mut auth: crate::Auth = use_context();
 
-    let submit = move || async move {
-        let secret = if let Some(Ok(totp)) = &*totp.read() {
-            #[cfg(not(debug_assertions))]
-            {
-                if totp.check_current(&code()).unwrap_or(false) {
-                    error.set(None);
-                } else {
-                    error.set(Some("Invalid authenticator code".into()));
-                    return;
-                }
-            }
-            totp.get_secret_base32()
-        } else {
-            return;
-        };
-
-        tracing::info!("Registering user: {}", username());
-
-        let user = api::auth::register(username(), secret).await;
-
-        tracing::info!("Registered user: {:?}", user);
-
-        if user.is_ok() {
-            auth.refresh();
-            on_register.call(());
-        } else {
-            error.set(Some("Failed to register user".into()));
-        }
-    };
-
     rsx! {
-        if show() {
-            div { class: "flex flex-col gap-4 items-center",
-                if let Ok(image_data) = image_data() {
-                    div {
-                        img {
-                            src: "data:image/png;base64,{image_data}",
-                            alt: "QR Code",
-                        }
+        div { class: "{show_class} flex-col gap-4 items-center",
+            if let Ok(image_data) = image_data() {
+                div {
+                    img {
+                        src: "data:image/png;base64,{image_data}",
+                        alt: "QR Code",
                     }
-                } else {
-                    p { "Failed to generate QR code" }
+                }
+            } else {
+                p { "Failed to generate QR code" }
+            }
+
+            p {
+                "Secret: "
+                span { "{secret}" }
+            }
+
+            form {
+                class: "flex flex-col gap-4 w-full",
+                onsubmit: move |e| async move {
+                    e.prevent_default();
+                        let secret = if let Some(Ok(totp)) = &*totp.read() {
+                            totp.get_secret_base32()
+                        } else {
+                            return;
+                        };
+                        tracing::info!("Registering user: {}", username());
+                        let user = api::auth::register(username(), secret, code()).await;
+                        if let Err(e) = user {
+                            match e {
+                                ServerFnError::WrappedServerError(s) => {
+                                    error.set(Some(s));
+                                }
+                                _ => {
+                                    tracing::error!("Registration error: {e:?}");
+                                    error.set(Some("Server error".into()));
+                                }
+                            }
+                        } else {
+                            tracing::info!("Registered user: {:?}", user);
+                            auth.refresh();
+                            on_register.call(());
+                        }
+                },
+                input {
+                    r#type: "text",
+                    class: "bg-input p-2 rounded",
+                    placeholder: "Authenticator code",
+                    value: "{code}",
+                    oninput: move |e| code.set(e.value()),
                 }
 
-                p {
-                    "Secret: "
-                    span { "{secret}" }
+                if let Some(error) = error() {
+                    ErrorMessage { "{error}" }
                 }
 
-                form {
-                    class: "flex flex-col gap-4 w-full",
-                    onsubmit: move |e| {
-                        e.prevent_default();
-                        e.stop_propagation();
-                        async move {
-                            submit().await;
-                        }
-                    },
-                    input {
-                        r#type: "text",
-                        class: "bg-input p-2 rounded",
-                        placeholder: "Authenticator code",
-                        value: "{code}",
-                        oninput: move |e| code.set(e.value()),
-                    }
-
-                    if let Some(error) = error() {
-                        ErrorMessage { "{error}" }
-                    }
-
-                    div { class: "flex justify-end w-full",
-                        button { class: "bg-primary text-primary-foreground rounded px-4 py-2 hover:bg-primary/90 transition",
-                            "Register"
-                        }
+                div { class: "flex justify-end w-full",
+                    button { class: "bg-primary text-primary-foreground rounded px-4 py-2 hover:bg-primary/90 transition",
+                        "Register"
                     }
                 }
             }

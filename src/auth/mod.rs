@@ -21,10 +21,10 @@ pub fn Login(register: NavigationTarget, on_login: EventHandler) -> Element {
                 onsubmit: move |e| async move {
                     e.prevent_default();
                     let user = api::login(username(), totp()).await;
-                    if let Err(err) = user {
+                    if let Err(_err) = user {
                         #[cfg(debug_assertions)]
                         {
-                            tracing::error!("Login error: {:?}", err);
+                            tracing::error!("Login error: {_err:?}");
                         }
                         error.set(Some("Invalid username or authenticator code".into()))
                     } else {

@@ -55,3 +55,4 @@ server = [
   "totp-rs/gen_secret",
 ]
 desktop = ["dep:http"]
+debug = []

@@ -8,7 +8,7 @@ use totp_rs::{Algorithm, Secret, TOTP};
 
 pub mod session;
 
-#[server]
+#[server(endpoint = "auth/generate_totp_secret")]
 pub async fn generate_totp_secret(name: String) -> Result<TOTP, ServerFnError> {
     let secret = Secret::generate_secret().to_bytes()?;
     let totp = TOTP::new(
@@ -26,14 +26,18 @@ pub async fn generate_totp_secret(name: String) -> Result<TOTP, ServerFnError> {
 
 #[data::cfg_server("auth/current_user")]
 pub async fn get_current_user() -> Result<Option<types::User>, ServerFnError> {
-    let user: Option<types::User> = extract().await.ok().map(|u: crate::User| types::User {
-        username: u.username,
-    });
+    let user: Option<types::User> = extract()
+        .await
+        .ok()
+        .and_then(|a: session::Auth| a.ok())
+        .map(|u: crate::User| types::User {
+            username: u.username,
+        });
 
     Ok(user)
 }
 
-#[data::cfg_server("auth/login")]
+#[server(endpoint = "auth/login")]
 pub async fn login(username: String, code: String) -> Result<types::User, ServerFnError> {
     let mut conn = db::connect();
 
@@ -59,7 +63,7 @@ pub async fn login(username: String, code: String) -> Result<types::User, Server
         user.username.clone(),
     )?;
 
-    let user = if cfg!(debug_assertions) || totp.check_current(&code)? {
+    let user = if cfg!(feature = "debug") || totp.check_current(&code)? {
         types::User {
             username: user.username,
         }
@@ -82,9 +86,48 @@ pub async fn login(username: String, code: String) -> Result<types::User, Server
     Ok(user)
 }
 
-#[data::cfg_server("auth/register")]
-pub async fn register(username: String, totp_secret: String) -> Result<types::User, ServerFnError> {
+#[server(endpoint = "/auth/register")]
+pub async fn register(
+    username: String,
+    totp_secret: String,
+    code: String,
+) -> Result<types::User, ServerFnError<String>> {
+    tracing::info!("Registering new user: {}", username);
+
     let mut conn = db::connect();
+
+    let secret = totp_rs::Secret::Encoded(totp_secret.clone());
+    let secret = secret.to_raw().map_err(|_| {
+        tracing::error!("Failed to convert secret to raw: {totp_secret}");
+        ServerFnError::Request("Bad secret".into())
+    })?;
+    let totp = totp_rs::TOTP::new(
+        totp_rs::Algorithm::SHA1,
+        6,
+        1,
+        30,
+        secret.to_bytes().map_err(|_| {
+            tracing::error!("Failed to convert secret to bytes: {totp_secret}");
+            ServerFnError::Request("Bad secret".into())
+        })?,
+        Some("Doskvol-Ltd".to_string()),
+        username.clone(),
+    )
+    .map_err(|_| {
+        tracing::error!("Failed to validate TOTP secret: {totp_secret}");
+        ServerFnError::Request("Bad secret".into())
+    })?;
+
+    if cfg!(not(feature = "debug"))
+        && !totp
+            .check_current(&code)
+            .map_err(|_| ServerFnError::ServerError("Time error".into()))?
+    {
+        tracing::info!("Invalid TOTP code for new user: {}", username);
+        return Err(ServerFnError::<String>::WrappedServerError(
+            "Invalid code".to_string(),
+        ));
+    }
 
     let new_user = db::models::NewUser {
         username: username.clone(),
@@ -97,7 +140,7 @@ pub async fn register(username: String, totp_secret: String) -> Result<types::Us
         .get_result(&mut conn)
         .map_err(|e| {
             dioxus::logger::tracing::info!("Failed to create user: {e}");
-            ServerFnError::<NoCustomError>::Request("Failed to create user".to_string())
+            ServerFnError::Request("Failed to create user".to_string())
         })?;
 
     let user = types::User {
@@ -108,10 +151,12 @@ pub async fn register(username: String, totp_secret: String) -> Result<types::Us
         tracing::error!("Failed to create session for new user");
     }
 
+    tracing::info!("Registered new user: {}", user.username);
+
     Ok(user)
 }
 
-#[server]
+#[server(endpoint = "/auth/check_username")]
 pub async fn check_username(username: String) -> Result<Option<String>, ServerFnError> {
     let mut conn = db::connect();
 

@@ -19,9 +19,9 @@ pub fn CreateCharacter(
     });
 
     rsx! {
-        Dialog { open,
+        Dialog { open, close_on_click: true,
             form {
-                onsubmit: move |e| {
+                onsubmit: move |e| async move {
                     e.prevent_default();
                     if name().is_empty() {
                         return;
@@ -61,7 +61,7 @@ pub fn CreateCharacter(
                     option { value: "whisper", "Whisper" }
                 }
 
-                div { class: "flex justify-between items-center",
+                div { class: "flex justify-between items-center gap-4",
                     button {
                         class: "bg-secondary text-secondary-foreground px-4 py-2 rounded",
                         onclick: move |e| {

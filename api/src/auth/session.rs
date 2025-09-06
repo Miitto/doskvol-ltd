@@ -2,11 +2,24 @@ use dioxus::prelude::*;
 
 pub const SESSION_COOKIE_NAME: &str = "session_token";
 
+pub enum Auth {
+    User(crate::User),
+    Anon,
+}
+
+impl Auth {
+    pub fn ok(self) -> Option<crate::User> {
+        match self {
+            Auth::User(u) => Some(u),
+            Auth::Anon => None,
+        }
+    }
+}
+
 #[cfg(feature = "server")]
 #[async_trait::async_trait]
-impl FromServerContext for crate::User {
+impl FromServerContext for Auth {
     type Rejection = ServerFnError<server_fn::error::NoCustomError>;
-
     async fn from_request(req: &DioxusServerContext) -> Result<Self, Self::Rejection> {
         use axum_extra::extract::cookie::CookieJar;
         use diesel::prelude::*;
@@ -21,9 +34,7 @@ impl FromServerContext for crate::User {
 
         if auth.value().is_empty() || auth.value() == "deleted" {
             tracing::debug!("Empty session cookie");
-            return Err(ServerFnError::<server_fn::error::NoCustomError>::Request(
-                "Not authenticated".into(),
-            ));
+            return Ok(Auth::Anon);
         }
 
         let mut conn = crate::db::connect();
@@ -36,9 +47,10 @@ impl FromServerContext for crate::User {
             s
         } else {
             tracing::info!("Invalid session token: {}", auth.value());
-            return Err(ServerFnError::<server_fn::error::NoCustomError>::Request(
-                "Not authenticated".into(),
-            ));
+
+            delete_session_cookie();
+
+            return Ok(Auth::Anon);
         };
 
         crate::db::schema::users::table
@@ -52,14 +64,27 @@ impl FromServerContext for crate::User {
                     "Not authenticated".into(),
                 )
             })
+            .map(Auth::User)
+    }
+}
+
+#[cfg(feature = "server")]
+#[async_trait::async_trait]
+impl FromServerContext for crate::User {
+    type Rejection = ServerFnError<server_fn::error::NoCustomError>;
+
+    async fn from_request(req: &DioxusServerContext) -> Result<Self, Self::Rejection> {
+        let auth: Auth = FromServerContext::from_request(req).await?;
+
+        auth.ok().ok_or_else(|| {
+            ServerFnError::<server_fn::error::NoCustomError>::Request("Not authenticated".into())
+        })
     }
 }
 
 #[cfg(feature = "server")]
 pub async fn set_current_user(user: &types::UserId) -> Result<(), ()> {
-    use axum_extra::extract::cookie::Cookie;
     use diesel::prelude::*;
-    use http::header::SET_COOKIE;
 
     let token = nanoid::nanoid!(25);
 
@@ -78,24 +103,7 @@ pub async fn set_current_user(user: &types::UserId) -> Result<(), ()> {
             tracing::error!("Failed to create session: {e}");
         })?;
 
-    let context = server_context();
-
-    let cookie = Cookie::build((SESSION_COOKIE_NAME, new_session.token))
-        .path("/")
-        .secure(true)
-        .http_only(true)
-        .same_site(cookie::SameSite::Strict)
-        .permanent()
-        .build();
-
-    if let Ok(header_value) = cookie.encoded().to_string().parse() {
-        context
-            .response_parts_mut()
-            .headers
-            .append(SET_COOKIE, header_value);
-    } else {
-        tracing::error!("Failed to set session cookie for user {}", user);
-    }
+    set_session_cookie(&new_session.token);
 
     Ok(())
 }
@@ -125,6 +133,37 @@ pub async fn clear_current_user() -> Result<(), ()> {
         tracing::error!("Failed to delete session: {e}");
     })?;
 
+    delete_session_cookie();
+
+    Ok(())
+}
+
+#[cfg(feature = "server")]
+fn set_session_cookie(value: &str) {
+    let context = server_context();
+
+    let cookie = cookie::Cookie::build((SESSION_COOKIE_NAME, value))
+        .path("/")
+        .secure(true)
+        .http_only(true)
+        .same_site(cookie::SameSite::Strict)
+        .permanent()
+        .build();
+
+    if let Ok(header_value) = cookie.encoded().to_string().parse() {
+        context
+            .response_parts_mut()
+            .headers
+            .append(http::header::SET_COOKIE, header_value);
+
+        tracing::info!("Removed session cookie");
+    } else {
+        tracing::error!("Failed to remove session cookie");
+    }
+}
+
+#[cfg(feature = "server")]
+fn delete_session_cookie() {
     let context = server_context();
 
     let cookie = cookie::Cookie::build(SESSION_COOKIE_NAME)
@@ -140,9 +179,9 @@ pub async fn clear_current_user() -> Result<(), ()> {
             .response_parts_mut()
             .headers
             .append(http::header::SET_COOKIE, header_value);
+
+        tracing::info!("Removed session cookie");
     } else {
         tracing::error!("Failed to remove session cookie");
     }
-
-    Ok(())
 }

@@ -12,8 +12,11 @@ use left::Left;
 use right::Right;
 
 #[component]
-pub fn Character(character: types::Character, readonly: ReadOnlySignal<Option<bool>>) -> Element {
-    let character = use_signal(|| character);
+pub fn Character(
+    character: ReadOnlySignal<types::Character>,
+    readonly: ReadOnlySignal<Option<bool>>,
+) -> Element {
+    let character = use_signal(|| character());
 
     let readonly = use_memo(move || readonly().unwrap_or(true));
 
